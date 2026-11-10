@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Family Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1d2230;--muted:#80869a;--line:#ebe6dc;--soft:#f6f3ec;--accent:#4f63ff;--accent-ink:#fff;--today:#fff3cf;--hour:56px;--r:22px;--shadow:0 2px 12px rgba(30,30,60,.06),0 1px 2px rgba(30,30,60,.04);--good:#2fbf71;--bad:#e5484d;--warn:#f5b301}
+body.dark{--bg:#11131a;--card:#1a1d27;--ink:#e9ebf2;--muted:#8d93a6;--line:#2a2e3b;--soft:#232735;--accent:#8a97ff;--accent-ink:#11131a;--today:#2a2817;--shadow:none}
+body.hasbg{background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:fixed;--soft:rgba(128,128,128,.16);--line:rgba(128,128,128,.28);--shadow:0 4px 24px rgba(0,0,0,.18)}
+body.hasbg .clock,body.hasbg .hubname{background:var(--cardbg,var(--card));-webkit-backdrop-filter:blur(var(--blur,0px));backdrop-filter:blur(var(--blur,0px));border-radius:18px;padding:8px 16px;box-shadow:var(--shadow)}
+body.hasbg .clock{padding-top:24px}
+#ytbg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;display:none}
+#ytbg.on{display:block}
+#ytbg iframe{position:absolute;top:50%;left:50%;width:max(100vw,177.78vh);height:max(100vh,56.25vw);transform:translate(-50%,-50%);border:0}
+.warn{font-size:13px;font-weight:700;background:color-mix(in srgb,var(--warn) 18%,var(--card));border-radius:10px;padding:8px 12px;margin:0 0 12px;line-height:1.45}
+/* Spotify */
+.spbar{display:none;align-items:center;gap:10px;margin:0 16px 14px;padding:6px 8px 6px 6px;border-radius:999px;background:var(--cardbg,var(--card));-webkit-backdrop-filter:blur(var(--blur,0px));backdrop-filter:blur(var(--blur,0px));box-shadow:var(--shadow);min-width:0}
+.spbar.on{display:flex}
+main.sp{padding-bottom:10px}
+.spbtn{display:flex;align-items:center;gap:6px;background:#1db954;color:#fff;font-weight:900;font-size:14px;padding:8px 14px;border-radius:999px;flex:none}
+.spnow{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-weight:800;font-size:14px}
+.spnow img{width:32px;height:32px;border-radius:6px;object-fit:cover;flex:none}
+.spnow .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spnow .t small{color:var(--muted);font-weight:700;margin-left:6px}
+.spctl{display:flex;gap:4px;flex:none}
+.spctl button,.spbig button.c{width:38px;height:38px;border-radius:50%;background:var(--soft);font-size:15px;display:grid;place-items:center}
+.spbig{display:flex;align-items:center;gap:14px;background:var(--soft);border-radius:18px;padding:12px;margin-bottom:12px}
+.spbig img,.spbig .ph{width:72px;height:72px;border-radius:10px;object-fit:cover;flex:none;background:var(--line)}
+.spbig .info{flex:1;min-width:0}
+.spbig .info b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spbig .info small{display:block;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spbig button.c.pp{width:48px;height:48px;background:#1db954;color:#fff;font-size:18px}
+.sptabs{display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.sptabs button{padding:8px 14px;border-radius:999px;font-weight:800;font-size:13px;background:var(--soft);color:var(--muted)}
+.sptabs button.on{background:var(--ink);color:var(--card)}
+.sptabs select{width:auto;margin-left:auto;padding:7px 10px;font-size:13px}
+.spgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:12px;max-height:52vh;overflow-y:auto;padding:2px}
+.spgrid button{text-align:left;border-radius:12px;padding:6px;transition:background .15s}
+.spgrid button:hover{background:var(--soft)}
+.spgrid img,.spgrid .ph{width:100%;aspect-ratio:1;border-radius:8px;object-fit:cover;background:var(--line);display:grid;place-items:center;font-size:34px}
+.spgrid b{display:block;font-size:13px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spgrid small{display:block;font-size:11.5px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modal.spot{width:min(900px,100%)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Nunito,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);overflow:hidden;user-select:none;-webkit-user-select:none;transition:background .4s}
+body.idle,body.idle *{cursor:none!important}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+input,select,textarea{font:inherit;font-size:15px;color:var(--ink);background:var(--soft);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;user-select:text;-webkit-user-select:text;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:70px}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);flex:none}
+
+#app{display:grid;grid-template-rows:auto 1fr auto;height:100vh;height:100dvh}
+.top{display:flex;align-items:flex-end;gap:20px;padding:16px 24px 8px}
+.clock{display:flex;align-items:baseline;gap:18px}
+.clock .time{font-size:60px;font-weight:900;letter-spacing:-1.5px;line-height:1}
+.clock .time small{font-size:22px;font-weight:800;margin-left:4px;letter-spacing:0;color:var(--muted)}
+.clock .date{font-size:24px;color:var(--muted);font-weight:800}
+.dcol{position:relative}
+.london{position:absolute;left:0;bottom:100%;margin-bottom:2px;white-space:nowrap;font-size:15px;font-weight:800;color:var(--muted);display:flex;align-items:baseline;gap:6px}
+.london b{color:var(--ink);font-weight:900}
+.london small{font-size:12px;opacity:.8}
+.wxrow .alt{font-size:15px;font-weight:800;color:var(--muted);align-self:flex-start;margin:4px 0 0 -6px}
+.hubname{margin-left:auto;font-weight:900;font-size:15px;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;align-self:center}
+.topbtns{display:flex;gap:6px;align-self:center;opacity:.35;transition:opacity .2s}
+.topbtns:hover,.topbtns:focus-within{opacity:1}
+.ibtn{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;font-size:17px}
+
+main{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:16px;padding:8px 16px 16px;min-height:0}
+aside{display:flex;flex-direction:column;gap:16px;min-height:0}
+.card{background:var(--cardbg,var(--card));-webkit-backdrop-filter:blur(var(--blur,0px));backdrop-filter:blur(var(--blur,0px));border-radius:var(--r);box-shadow:var(--shadow);min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.card-h{display:flex;align-items:center;gap:8px;padding:14px 18px 0;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted)}
+.card-h .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:800;display:flex;align-items:center;gap:6px}
+.toolbar{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.toolbar h1{font-size:23px;margin:0 8px;font-weight:900;white-space:nowrap}
+.nav{width:38px;height:38px;border-radius:50%;background:var(--soft);font-size:20px;font-weight:900;display:grid;place-items:center}
+.pill{padding:8px 14px;border-radius:999px;background:var(--soft);font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.seg{display:flex;background:var(--soft);border-radius:999px;padding:4px;margin-left:auto}
+.seg button{padding:6px 14px;border-radius:999px;font-weight:800;color:var(--muted);font-size:13px}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.add{background:var(--accent);color:var(--accent-ink);padding:9px 16px;border-radius:999px;font-weight:900;font-size:14px;white-space:nowrap}
+.ctl{transition:opacity .3s}
+body.idle .ctl{opacity:0;pointer-events:none}
+.sync{width:9px;height:9px;border-radius:50%;background:#bbb;flex:none}
+.sync.ok{background:var(--good)}.sync.syncing{background:var(--warn);animation:pulse 1s infinite}.sync.error{background:var(--bad)}
+@keyframes pulse{50%{opacity:.35}}
+#calbody{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* time grid */
+.tg{display:flex;flex-direction:column;flex:1;min-height:0}
+.tg-head,.tg-adrow,.tg-inner{display:grid}
+.tg-dh{padding:8px 4px 6px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.tg-dh .dow{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+.tg-dh .dnum{font-size:22px;font-weight:900;width:40px;height:40px;display:grid;place-items:center;border-radius:50%}
+.tg-dh.is-today .dnum{background:var(--accent);color:var(--accent-ink)}
+.dwx{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap}
+.tg-adrow{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tg-adlabel{font-size:10px;color:var(--muted);padding:8px 6px 0 0;text-align:right;font-weight:800;text-transform:uppercase}
+.tg-ad{min-height:30px;padding:3px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:3px;cursor:pointer;max-height:84px;overflow:hidden;min-width:0}
+.tg-body{flex:1;overflow-y:auto;min-height:0;position:relative;scrollbar-width:none}
+.tg-body::-webkit-scrollbar{display:none}
+.tg-inner{height:calc(24 * var(--hour));position:relative}
+.tg-hours{position:relative}
+.tg-hours span{position:absolute;right:8px;font-size:11px;color:var(--muted);transform:translateY(-50%);font-weight:800;white-space:nowrap}
+.tg-col{position:relative;border-left:1px solid var(--line);background-image:linear-gradient(to bottom,var(--line) 1px,transparent 1px);background-size:100% var(--hour);cursor:pointer;min-width:0}
+.tg-col.is-today{background-color:color-mix(in srgb,var(--today) 55%,transparent)}
+.ev{position:absolute;border-radius:9px;padding:3px 7px;font-size:13px;overflow:hidden;background:color-mix(in srgb,var(--c) 22%,var(--card));border-left:4px solid var(--c);line-height:1.25;cursor:pointer;display:flex;flex-direction:column;z-index:2}
+.ev b{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev span{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now{position:absolute;left:0;right:0;height:2px;background:var(--bad);z-index:4;pointer-events:none}
+.now::before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--bad)}
+.chip{font-size:12.5px;padding:3px 7px;border-radius:7px;background:color-mix(in srgb,var(--c) 22%,var(--card));border-left:3px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:800;cursor:pointer;flex-shrink:0}
+.chip i{font-style:normal;color:var(--muted);font-weight:700;margin-right:3px}
+
+/* month */
+.month{flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto repeat(6,minmax(0,1fr));min-height:0}
+.mdow{text-align:center;font-size:12px;font-weight:900;color:var(--muted);text-transform:uppercase;padding:9px 0;letter-spacing:.6px}
+.mcell{border-top:1px solid var(--line);border-left:1px solid var(--line);padding:4px;display:flex;flex-direction:column;gap:3px;overflow:hidden;cursor:pointer;min-height:0;min-width:0}
+.mcell:nth-child(7n+1){border-left:0}
+.mcell.other>*{opacity:.45}
+.mcell.is-today{background:color-mix(in srgb,var(--today) 70%,transparent)}
+.mnum{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:15px;padding:0 2px;gap:4px}
+.mcell.is-today .mnum span{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 8px}
+.mnum small{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden}
+.more{font-size:12px;color:var(--muted);font-weight:800;padding-left:4px}
+
+/* weather box */
+#wxcard{flex:none}
+.wxbody{padding:6px 18px 16px}
+.wxrow{display:flex;align-items:center;gap:12px}
+.wxrow .ic{font-size:58px;line-height:1}
+.wxrow .t{font-size:52px;font-weight:900;line-height:1;letter-spacing:-1px}
+.wxrow .d{font-weight:800;line-height:1.35;font-size:14px;flex:1;min-width:0}
+.wxrow .d small{display:block;color:var(--muted);font-weight:700;font-size:12.5px}
+.hourly{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:12px;text-align:center;font-size:11.5px;font-weight:800;color:var(--muted)}
+.hourly b{display:block;color:var(--ink);font-size:14px}
+.hourly .e{font-size:18px;display:block;margin:2px 0}
+.hourly .pp{display:block;color:#3b8bea;font-size:10.5px;min-height:13px}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
+.days div{background:var(--soft);border-radius:14px;padding:8px 2px;text-align:center;font-size:12px;font-weight:800;color:var(--muted)}
+.days .e{font-size:22px;display:block;margin:2px 0}
+.days b{color:var(--ink);font-size:15px}
+.days .pp{display:block;color:#3b8bea;font-size:10.5px;min-height:13px}
+
+/* fantasy box */
+#ffcard{flex:1}
+.ffbody{flex:1;min-height:0;padding:10px 16px 14px;display:flex;flex-direction:column;overflow:hidden}
+.ffbody>*{flex-shrink:0}
+.dots{display:flex;gap:4px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--accent)}
+.lgname{font-weight:900;font-size:17px;margin:0 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lgname small{color:var(--muted);font-weight:800;font-size:13px;margin-left:6px}
+.big{background:color-mix(in srgb,var(--accent) 8%,var(--soft));border:2px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:18px;padding:8px 12px;margin-bottom:12px}
+.big .tm{display:flex;align-items:center;gap:10px;padding:6px 0}
+.big .tm+.tm{border-top:1px dashed var(--line)}
+.logo{width:36px;height:36px;border-radius:50%;flex:none;background:var(--line);object-fit:cover;display:grid;place-items:center;font-weight:900;font-size:13px;color:var(--muted);overflow:hidden}
+.big .nm{flex:1;min-width:0}
+.big .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px}
+.big .nm small{color:var(--muted);font-weight:700;font-size:12px}
+.big .pts{text-align:right;font-size:26px;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.05}
+.big .pts small{display:block;font-size:11px;font-weight:800}
+.big .tm.lead .pts{color:var(--ink)}
+.you{font-size:10px;background:var(--accent);color:var(--accent-ink);padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:middle;letter-spacing:.3px}
+.wp{height:6px;border-radius:9px;background:var(--line);overflow:hidden;margin:4px 0 2px;display:flex}
+.wp i{background:var(--accent)}
+.sub{font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:900;margin:2px 0 6px}
+.mrow{display:grid;grid-template-columns:24px minmax(0,1fr) 52px 52px minmax(0,1fr) 24px;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--line);font-weight:800;font-size:13.5px}
+.mrow:last-child{border:0}
+.mrow .logo{width:24px;height:24px;font-size:10px}
+.mrow .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow .n.r{text-align:right}
+.mrow .p{text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
+.mrow .p.w{color:var(--ink);font-weight:900}
+.stand{width:100%;border-collapse:collapse;font-size:14px}
+.stand th{font-size:11px;color:var(--muted);text-align:right;font-weight:900;padding:2px 4px 6px;text-transform:uppercase}
+.stand th:nth-child(2){text-align:left}
+.stand td{padding:5px 4px;border-bottom:1px solid var(--line);font-weight:700;white-space:nowrap}
+.stand td:first-child{color:var(--muted);width:22px}
+.stand td.tn{max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.stand td.n{text-align:right;font-variant-numeric:tabular-nums}
+.stand tr.me td{color:var(--accent);font-weight:900}
+.gtop{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.gs{background:var(--soft);border-radius:14px;padding:8px 10px;min-width:0}
+.gs.lead{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent)}
+.gn{display:flex;align-items:center;gap:6px;min-width:0}
+.gn b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gn .logo{width:22px;height:22px;font-size:9px}
+.gv{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:2px}
+.gv span{font-size:26px;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.1}
+.gs.lead .gv span{color:var(--ink)}
+.gv small{font-size:10.5px;color:var(--muted);font-weight:700;text-align:right;line-height:1.25}
+.gs.r .gn{flex-direction:row-reverse;text-align:right}
+.gs.r .gv{flex-direction:row-reverse}
+.gs.r .gv small{text-align:left}
+.lineup{flex:1;min-height:0;overflow:hidden}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) 40px 34px 40px minmax(0,1fr);align-items:center;gap:4px;padding:4px 0;border-bottom:1px solid var(--line)}
+.lrow:last-child{border:0}
+.pl{min-width:0;line-height:1.2}
+.pl.r{text-align:right}
+.pl b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl small{display:block;font-size:10.5px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl small.in{color:var(--bad)}
+.pp{text-align:center;font-weight:900;font-size:14px;font-variant-numeric:tabular-nums}
+.pp.proj{color:var(--muted);font-weight:700;font-style:italic}
+.pp.live{color:var(--bad)}
+.sl{text-align:center;font-size:10px;font-weight:900;color:var(--muted);background:var(--soft);border-radius:6px;padding:3px 0}
+.pkstats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.pkstats div{background:var(--soft);border-radius:12px;padding:6px 4px;text-align:center;font-size:11px;font-weight:800;color:var(--muted)}
+.pkstats b{display:block;font-size:19px;color:var(--ink);font-variant-numeric:tabular-nums}
+.pkx{font-size:12px;font-weight:700;color:var(--muted);margin:-4px 0 8px;line-height:1.4}
+.rides{flex:1;min-height:0;overflow:hidden}
+.ride{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-weight:800;font-size:13.5px}
+.ride:last-child{border:0}
+.ride span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wt{flex:none;min-width:52px;text-align:center;border-radius:999px;padding:2px 8px;font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;color:#fff}
+.wt.g{background:#2fbf71}.wt.y{background:#e3a008}.wt.o{background:#f0752b}.wt.r{background:#e5484d}.wt.x{background:var(--soft);color:var(--muted)}
+.open-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:5px;vertical-align:middle}
+.open-dot.no{background:var(--muted)}
+.bgprev{width:120px;height:68px;border-radius:10px;background:var(--soft) center/cover no-repeat;border:1.5px solid var(--line);flex:none}
+input[type=range]{padding:0;accent-color:var(--accent);background:none;border:0}
+.empty{text-align:center;padding:20px 10px;color:var(--muted);margin:auto 0}
+.empty .bigic{font-size:44px}
+.empty h3{color:var(--ink);margin:8px 0 4px;font-size:17px}
+.empty p{margin:0 0 14px;line-height:1.45;font-size:14px}
+.updated{font-size:11px;color:var(--muted);text-align:center;font-weight:700;margin-top:auto;padding-top:8px}
+
+/* modal */
+.backdrop{position:fixed;inset:0;background:rgba(15,18,30,.45);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.modal{background:var(--card);border-radius:24px;width:min(600px,100%);max-height:92vh;overflow:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal.wide{width:min(740px,100%)}
+.modal h2{margin:0 0 16px;font-size:23px;font-weight:900}
+.modal h3{margin:22px 0 4px;font-size:16px;font-weight:900}
+.modal .help{font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5}
+.modal .help code{background:var(--soft);padding:1px 6px;border-radius:6px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;color:var(--muted);margin-bottom:12px;min-width:0}
+.check{display:flex;align-items:center;gap:10px;font-weight:800;margin-bottom:12px;cursor:pointer}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:120px}
+.actions{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.btn{padding:10px 18px;border-radius:999px;font-weight:900;background:var(--soft);white-space:nowrap}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:#fff}
+.btn:disabled{opacity:.5}
+.swatches{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.swatches button{width:30px;height:30px;border-radius:50%;background:var(--c);border:3px solid transparent}
+.swatches button.on{border-color:var(--ink)}
+.callist{display:flex;flex-direction:column;gap:2px;margin-bottom:12px;max-height:220px;overflow:auto}
+.callist label{display:flex;align-items:center;gap:10px;padding:5px 4px;font-weight:700;cursor:pointer}
+.callist .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.status{font-size:13px;font-weight:800;margin:4px 0 10px}
+.status.ok{color:var(--good)}.status.err{color:var(--bad)}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:12px 20px;border-radius:999px;font-weight:800;z-index:60;animation:fade .2s;max-width:90vw;text-align:center}
+.ro{font-size:13px;color:var(--muted);font-weight:700;background:var(--soft);padding:8px 12px;border-radius:10px;margin-bottom:12px}
+
+@media (max-height:850px){ .clock .time{font-size:46px} .top{padding:10px 22px 4px} .stand td{padding:3px 4px} .mrow{padding:4px 0} .big .tm{padding:3px 0} .big .pts{font-size:22px} .days .e,.hourly .e{font-size:16px} .wxrow .ic{font-size:46px} .wxrow .t{font-size:42px} .lgname{margin-bottom:6px} .lrow{padding:1px 0} .pl b{font-size:12px} .pl small{font-size:10px} .gv span{font-size:21px} .gs{padding:5px 8px} }
+@media (max-width:1150px){ main{grid-template-columns:minmax(0,1fr) 340px} .clock .time{font-size:48px} .clock .date{font-size:19px} .wxrow .t{font-size:42px} .wxrow .ic{font-size:46px} }
+@media (max-width:820px){ body{overflow:auto} #app{height:auto} main{grid-template-columns:1fr} #calcard{height:80vh} #ffcard{min-height:420px} }
+</style>
+</head>
+<body>
+<div id="ytbg"></div>
+<div id="app">
+  <header class="top">
+    <div class="clock"><div class="time" id="time"></div><div class="dcol"><div class="london" id="london"></div><div class="date" id="date"></div></div></div>
+    <div class="hubname" id="hubname"></div>
+    <div class="topbtns ctl">
+      <button class="ibtn" id="btn-sound" title="Video sound on/off" style="display:none">🔇</button>
+      <button class="ibtn" id="btn-refresh" title="Refresh everything">⟳</button>
+      <button class="ibtn" id="btn-full" title="Full screen (F)">⛶</button>
+      <button class="ibtn" id="btn-settings" title="Settings">⚙️</button>
+    </div>
+  </header>
+  <main>
+    <section class="card" id="calcard">
+      <div class="toolbar">
+        <h1 id="range"></h1>
+        <span class="sync" id="sync" title=""></span>
+        <div class="ctl" style="display:flex;gap:8px;align-items:center;margin-left:auto">
+          <button class="nav" id="prev" aria-label="Previous">‹</button>
+          <button class="nav" id="next" aria-label="Next">›</button>
+          <button class="pill" id="today">Today</button>
+          <div class="seg" id="viewseg"><button data-v="day">Day</button><button data-v="week">Week</button><button data-v="month">Month</button></div>
+          <button class="add" id="addbtn">＋ Event</button>
+        </div>
+      </div>
+      <div id="calbody"></div>
+    </section>
+    <aside>
+      <section class="card" id="wxcard">
+        <div class="card-h">☀️ Weather <span class="r" id="wxcity"></span></div>
+        <div class="wxbody" id="wx"></div>
+      </section>
+      <section class="card" id="ffcard">
+        <div class="card-h"><span id="boxtitle">🏈 Fantasy football</span><span class="r" id="ffmeta"></span></div>
+        <div class="ffbody" id="ff"></div>
+      </section>
+    </aside>
+  </main>
+  <footer class="spbar" id="spbar">
+    <button class="spbtn" id="spbtn" title="Open Spotify library">🎵 Spotify</button>
+    <div class="spnow" id="spnow"></div>
+    <div class="spctl ctl"><button id="sp-prev" title="Previous">⏮</button><button id="sp-play" title="Play/pause">⏯</button><button id="sp-next" title="Next">⏭</button></div>
+  </footer>
+</div>
+
+<script>
+'use strict';
+/* ================= helpers ================= */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('hub.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('hub.' + k, JSON.stringify(v)); } catch {} }
+};
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+let HOUR = 56;
+const pad = n => String(n).padStart(2, '0');
+const sod = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y, m, dd] = s.split('-').map(Number); return new Date(y, m - 1, dd); };
+const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtTime = d => S.use24h ? hm(d)
+  : d.toLocaleTimeString('en-US', d.getMinutes() ? { hour: 'numeric', minute: '2-digit' } : { hour: 'numeric' }).replace(/\s/g, '').toLowerCase();
+const fmtHourLabel = h => S.use24h ? `${pad(h)}:00` : `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+const fmtPts = n => (Math.round((n || 0) * 10) / 10).toFixed(1);
+
+async function getJSON(url, opts = {}) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 30000);
+  try {
+    const r = await fetch(url, { ...opts, signal: ctl.signal });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch (e) {
+    throw new Error(e.name === 'AbortError' ? 'Timed out' : (e.message || 'Network error'));
+  } finally { clearTimeout(t); }
+}
+let toastTimer;
+function toast(msg) {
+  $('.toast')?.remove();
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 3500);
+}
+
+/* ================= settings & state ================= */
+const DEFAULTS = {
+  title: 'Family Hub', use24h: false, weekStart: 0, night: 'auto', dayStartHour: 7, dayEndHour: 22, defaultView: 'week',
+  bridgeUrl: '', bridgeKey: '', selectedCals: null, defaultCal: '',
+  city: 'New York, NY', lat: 40.7128, lon: -74.006, units: 'fahrenheit',
+  espnLeagues: '', espnTeam: '', rotateSecs: 20,
+  showFantasy: true, showParks: false, parkIds: [], parkNames: {},
+  boxOpacity: 72, boxBlur: true, bgTheme: 'auto', ytUrl: '', ytSound: false,
+  spClientId: '', spDevice: 'surrounded'
+};
+let S = Object.assign({}, DEFAULTS, LS.get('settings', {}));
+const saveSettings = () => LS.set('settings', S);
+
+const state = {
+  view: S.defaultView, cursor: sod(new Date()), events: [],
+  calendars: LS.get('calendars', []), weather: LS.get('weatherCache', null),
+  fantasy: LS.get('ffCache', null), ffPage: 0, parks: {}, tpBridge: false, bg: LS.get('bg', null),
+  cache: {}, loadSeq: 0, sync: 'off', syncMsg: ''
+};
+
+const PALETTE = ['#7c6cf0', '#4f9dff', '#2fbf71', '#f5b301', '#ff8a3d', '#ff5d7a', '#00b8c4', '#a86b4c'];
+const EVCOLORS = { 1: '#7986cb', 2: '#33b679', 3: '#8e24aa', 4: '#e67c73', 5: '#f6bf26', 6: '#f4511e', 7: '#039be5', 8: '#616161', 9: '#3f51b5', 10: '#0b8043', 11: '#d50000' };
+
+/* ================= local (device) events ================= */
+function getLocalRaw() { return LS.get('localEvents', []); }
+function setLocalRaw(a) { LS.set('localEvents', a); }
+function normLocal(ev) {
+  return {
+    id: ev.id, key: 'local|' + ev.id, calId: 'local', source: 'local', title: ev.title,
+    allDay: !!ev.allDay, start: ev.allDay ? parseYmd(ev.start) : new Date(ev.start),
+    end: ev.allDay ? parseYmd(ev.end) : new Date(ev.end), location: ev.location || '',
+    description: ev.description || '', color: ev.color || PALETTE[0], writable: true
+  };
+}
+function seedDemo() {
+  if (LS.get('seeded', false)) return;
+  const t = sod(new Date());
+  const at = (dayOff, h, m = 0) => { const d = addDays(t, dayOff); d.setHours(h, m); return d.toISOString(); };
+  setLocalRaw([
+    { id: uid(), title: 'Soccer practice (sample)', start: at(0, 16, 30), end: at(0, 17, 45), color: '#2fbf71', location: 'Riverside Park' },
+    { id: uid(), title: 'Family dinner (sample)', start: at(1, 18, 30), end: at(1, 20), color: '#ff8a3d' },
+    { id: uid(), title: 'Dentist (sample)', start: at(-1, 9), end: at(-1, 10), color: '#4f9dff' },
+    { id: uid(), title: 'Grandma visiting (sample)', allDay: true, start: ymd(addDays(t, 2)), end: ymd(addDays(t, 4)), color: '#7c6cf0' }
+  ]);
+  LS.set('seeded', true);
+}
+
+/* ================= Google Apps Script bridge ================= */
+async function bridge(action, params = {}, post = false) {
+  if (!S.bridgeUrl) throw new Error('Bridge not set up');
+  const body = { ...params, action, key: S.bridgeKey };
+  let j;
+  if (post) {
+    j = await getJSON(S.bridgeUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  } else {
+    const u = new URL(S.bridgeUrl);
+    Object.entries(body).forEach(([k, v]) => u.searchParams.set(k, v));
+    j = await getJSON(u.toString());
+  }
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+const calById = id => state.calendars.find(c => c.id === id);
+function selectedCalIds() {
+  if (Array.isArray(S.selectedCals)) return S.selectedCals;
+  return state.calendars.filter(c => !c.hidden).map(c => c.id);
+}
+function normGoogle(ev) {
+  const cal = calById(ev.calId);
+  return {
+    id: ev.id, key: ev.calId + '|' + ev.id + '|' + ev.start, calId: ev.calId, source: 'google',
+    title: ev.title || '(No title)', allDay: !!ev.allDay,
+    start: ev.allDay ? parseYmd(ev.start) : new Date(ev.start),
+    end: ev.allDay ? parseYmd(ev.end) : new Date(ev.end),
+    origStart: ev.start, location: ev.location || '', description: ev.description || '',
+    color: EVCOLORS[ev.color] || cal?.color || '#4f9dff', writable: cal ? cal.writable !== false : true,
+    recurring: !!ev.recurring
+  };
+}
+async function loadCalendars() {
+  const r = await bridge('calendars');
+  state.calendars = r.calendars || [];
+  LS.set('calendars', state.calendars);
+  return state.calendars;
+}
+
+/* ================= calendar ================= */
+function sow(d) { const x = sod(d); return addDays(x, -((x.getDay() - S.weekStart + 7) % 7)); }
+function viewRange() {
+  const c = state.cursor;
+  if (state.view === 'day') return [sod(c), addDays(sod(c), 1)];
+  if (state.view === 'week') { const s = sow(c); return [s, addDays(s, 7)]; }
+  const s = sow(new Date(c.getFullYear(), c.getMonth(), 1));
+  return [s, addDays(s, 42)];
+}
+function setSync(st, msg = '') {
+  state.sync = st; state.syncMsg = msg;
+  const dot = $('#sync'); dot.className = 'sync ' + st;
+  dot.title = msg || (S.bridgeUrl ? 'Google Calendar' : 'Events saved on this device only');
+}
+async function loadEvents() {
+  const [s, e] = viewRange();
+  const rk = s.toISOString() + '|' + e.toISOString();
+  const local = () => getLocalRaw().map(normLocal).filter(x => x.end > s && x.start < e);
+  state.events = [...(state.cache[rk] || []), ...local()];
+  renderCalendar();
+  if (!S.bridgeUrl) { setSync('off'); return; }
+  const seq = ++state.loadSeq;
+  setSync('syncing');
+  try {
+    if (!state.calendars.length) await loadCalendars();
+    const ids = selectedCalIds();
+    const r = await bridge('events', { start: s.toISOString(), end: e.toISOString(), cals: ids.length ? ids.join(',') : '__none__' });
+    const g = (r.events || []).map(normGoogle);
+    state.cache[rk] = g;
+    if (seq !== state.loadSeq) return;
+    state.events = [...g, ...local()];
+    setSync('ok', 'Google Calendar · synced ' + fmtTime(new Date()));
+    renderCalendar();
+  } catch (err) {
+    if (seq === state.loadSeq) setSync('error', 'Google sync failed: ' + err.message);
+  }
+}
+const invalidate = () => { state.cache = {}; };
+
+function overlapsDay(e, d) { const s = sod(d), en = addDays(s, 1); return e.start < en && e.end > s; }
+function eventsOnDay(d) { return state.events.filter(e => overlapsDay(e, d)).sort((a, b) => (b.allDay - a.allDay) || (a.start - b.start)); }
+function wxFor(d) {
+  const w = state.weather?.daily; if (!w) return '';
+  const i = w.time.indexOf(ymd(d)); if (i < 0) return '';
+  return `${wmo(w.weather_code[i])[0]} ${Math.round(w.temperature_2m_max[i])}°/${Math.round(w.temperature_2m_min[i])}°`;
+}
+function chip(e) { return `<div class="chip" data-key="${esc(e.key)}" style="--c:${e.color}">${e.allDay ? '' : `<i>${fmtTime(e.start)}</i>`}${esc(e.title)}</div>`; }
+function rangeTitle() {
+  const [s, e] = viewRange(), c = state.cursor;
+  if (state.view === 'day') return c.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  if (state.view === 'month') return c.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const l = addDays(e, -1);
+  const sm = s.toLocaleDateString('en-US', { month: 'short' }), lm = l.toLocaleDateString('en-US', { month: 'short' });
+  return sm === lm ? `${sm} ${s.getDate()} – ${l.getDate()}` : `${sm} ${s.getDate()} – ${lm} ${l.getDate()}`;
+}
+function renderCalendar(refit = true) {
+  $('#range').textContent = rangeTitle();
+  $$('#viewseg button').forEach(b => b.classList.toggle('on', b.dataset.v === state.view));
+  const body = $('#calbody');
+  if (state.view === 'month') { body.innerHTML = renderMonth(); return; }
+  const [s] = viewRange();
+  const n = state.view === 'day' ? 1 : 7;
+  body.innerHTML = renderTimeGrid(Array.from({ length: n }, (_, i) => addDays(s, i)));
+  const tb = $('.tg-body');
+  // Fit the chosen hours (e.g. 7am–10pm) to the screen so nothing needs scrolling.
+  const span = Math.max(4, S.dayEndHour - S.dayStartHour);
+  const fit = Math.max(22, Math.floor((tb.clientHeight - 14) / span));
+  if (refit && Math.abs(fit - HOUR) > 1) { HOUR = fit; document.documentElement.style.setProperty('--hour', HOUR + 'px'); return renderCalendar(false); }
+  tb.scrollTop = Math.max(0, S.dayStartHour * HOUR - 10);
+}
+function renderTimeGrid(days) {
+  const n = days.length, cols = `52px repeat(${n}, minmax(0,1fr))`, today = new Date();
+  let h = `<div class="tg"><div class="tg-head" style="grid-template-columns:${cols}"><div></div>`;
+  h += days.map(d => {
+    const w = wxFor(d);
+    return `<div class="tg-dh ${sameDay(d, today) ? 'is-today' : ''}" data-day="${ymd(d)}"><span class="dow">${d.toLocaleDateString('en-US', { weekday: 'short' })}</span><span class="dnum">${d.getDate()}</span>${w ? `<span class="dwx">${w}</span>` : ''}</div>`;
+  }).join('') + '</div>';
+  h += `<div class="tg-adrow" style="grid-template-columns:${cols}"><div class="tg-adlabel">all day</div>`;
+  h += days.map(d => `<div class="tg-ad" data-day="${ymd(d)}">${state.events.filter(e => e.allDay && overlapsDay(e, d)).map(chip).join('')}</div>`).join('') + '</div>';
+  let hours = '';
+  for (let i = 1; i < 24; i++) hours += `<span style="top:${i * HOUR}px">${fmtHourLabel(i)}</span>`;
+  h += `<div class="tg-body"><div class="tg-inner" style="grid-template-columns:${cols}"><div class="tg-hours">${hours}</div>`;
+  days.forEach(d => {
+    const isT = sameDay(d, today);
+    const nowLine = isT ? `<div class="now" style="top:${(today.getHours() * 60 + today.getMinutes()) / 60 * HOUR}px"></div>` : '';
+    h += `<div class="tg-col ${isT ? 'is-today' : ''}" data-day="${ymd(d)}">${layoutDay(d)}${nowLine}</div>`;
+  });
+  return h + '</div></div></div>';
+}
+function layoutDay(d) {
+  const ds = sod(d), de = addDays(ds, 1);
+  const segs = state.events.filter(e => !e.allDay && e.start < de && e.end > ds)
+    .map(e => ({ e, s: Math.max(+e.start, +ds), en: Math.min(+e.end, +de) }))
+    .sort((a, b) => a.s - b.s || b.en - a.en);
+  let out = '', cluster = [], lanes = [], clusterEnd = 0;
+  const flush = () => { cluster.forEach(c => { out += evBlock(c, lanes.length, ds); }); cluster = []; lanes = []; clusterEnd = 0; };
+  segs.forEach(sg => {
+    if (cluster.length && sg.s >= clusterEnd) flush();
+    let lane = lanes.findIndex(end => end <= sg.s);
+    if (lane < 0) { lane = lanes.length; lanes.push(sg.en); } else lanes[lane] = sg.en;
+    sg.lane = lane; cluster.push(sg); clusterEnd = Math.max(clusterEnd, sg.en);
+  });
+  flush();
+  return out;
+}
+function evBlock(sg, n, ds) {
+  const top = (sg.s - ds) / 36e5 * HOUR;
+  const ht = Math.max((sg.en - sg.s) / 36e5 * HOUR, 22);
+  const w = 100 / n, e = sg.e;
+  const time = ht > 36 ? `<span>${fmtTime(e.start)} – ${fmtTime(e.end)}${e.location && ht > 54 ? ' · ' + esc(e.location) : ''}</span>` : '';
+  return `<div class="ev" data-key="${esc(e.key)}" style="top:${top}px;height:${ht - 2}px;left:calc(${sg.lane * w}% + 2px);width:calc(${w}% - 4px);--c:${e.color}"><b>${ht <= 36 ? fmtTime(e.start) + ' ' : ''}${esc(e.title)}</b>${time}</div>`;
+}
+function renderMonth() {
+  const [s] = viewRange(), m = state.cursor.getMonth(), today = new Date();
+  const bodyH = $('#calbody').clientHeight || 600;
+  const max = Math.max(1, Math.floor(((bodyH - 36) / 6 - 30) / 23));
+  let h = '<div class="month">';
+  for (let i = 0; i < 7; i++) h += `<div class="mdow">${addDays(s, i).toLocaleDateString('en-US', { weekday: 'short' })}</div>`;
+  for (let i = 0; i < 42; i++) {
+    const d = addDays(s, i), evs = eventsOnDay(d), w = wxFor(d);
+    const shown = evs.length > max ? max - 1 : max;
+    h += `<div class="mcell ${d.getMonth() !== m ? 'other' : ''} ${sameDay(d, today) ? 'is-today' : ''}" data-day="${ymd(d)}">
+      <div class="mnum"><span>${d.getDate()}</span>${w ? `<small>${w}</small>` : ''}</div>
+      ${evs.slice(0, Math.max(shown, 0)).map(chip).join('')}${evs.length > shown ? `<div class="more">+${evs.length - shown} more</div>` : ''}</div>`;
+  }
+  return h + '</div>';
+}
+
+/* ================= event editor ================= */
+function openModal(html, cls = '') {
+  closeModal();
+  const b = document.createElement('div'); b.className = 'backdrop';
+  b.innerHTML = `<div class="modal ${cls}">${html}</div>`;
+  b.addEventListener('mousedown', e => { b.dataset.down = e.target === b ? '1' : ''; });
+  b.addEventListener('click', e => { if (e.target === b && b.dataset.down) closeModal(); });
+  document.body.appendChild(b);
+  return b.firstElementChild;
+}
+function closeModal() { $('.backdrop')?.remove(); }
+function writableCals() { return state.calendars.filter(c => c.writable !== false); }
+function roundedNow() { const d = new Date(); d.setMinutes(d.getMinutes() < 30 ? 30 : 60, 0, 0); return d; }
+
+function openEditor(existing, preset = {}) {
+  const ev = existing || {
+    title: '', allDay: !!preset.allDay, calId: S.defaultCal || (S.bridgeUrl ? (state.calendars.find(c => c.primary)?.id || '') : 'local'),
+    start: preset.start || roundedNow(), end: preset.end || new Date(+(preset.start || roundedNow()) + 36e5),
+    location: '', description: '', color: PALETTE[0], writable: true
+  };
+  if (!S.bridgeUrl && !existing) ev.calId = 'local';
+  const ro = existing && !existing.writable;
+  const endIncl = ev.allDay ? addDays(ev.end, -1) : ev.end;
+  let calOpts = writableCals().map(c => `<option value="${esc(c.id)}" ${c.id === ev.calId ? 'selected' : ''}>${esc(c.name)}${c.primary ? ' (main)' : ''}</option>`).join('');
+  if (ro) calOpts = `<option>${esc(calById(ev.calId)?.name || 'Read-only calendar')}</option>`;
+  calOpts += `<option value="local" ${ev.calId === 'local' ? 'selected' : ''}>This display only</option>`;
+  const dis = ro ? 'disabled' : '';
+  const m = openModal(`
+    <h2>${existing ? (ro ? 'Event' : 'Edit event') : 'New event'}</h2>
+    ${ro ? '<div class="ro">This calendar is read-only.</div>' : ''}
+    ${existing?.recurring ? '<div class="ro">Repeating event — changes apply to this occurrence.</div>' : ''}
+    <div class="field">What<input id="f-title" placeholder="What's happening?" value="${esc(ev.title)}" ${dis}></div>
+    <label class="check"><input type="checkbox" id="f-allday" ${ev.allDay ? 'checked' : ''} ${dis}> All day</label>
+    <div class="row">
+      <div class="field">Date<input type="date" id="f-date" value="${ymd(ev.start)}" ${dis}></div>
+      <div class="field timed">Start<input type="time" id="f-start" value="${hm(ev.start)}" ${dis}></div>
+      <div class="field timed">End<input type="time" id="f-end" value="${hm(ev.end)}" ${dis}></div>
+      <div class="field alld">Through<input type="date" id="f-enddate" value="${ymd(endIncl)}" ${dis}></div>
+    </div>
+    <div class="field">Calendar<select id="f-cal" ${dis}>${calOpts}</select></div>
+    <div class="swatches" id="f-colors">${PALETTE.map(c => `<button type="button" data-c="${c}" style="--c:${c}" class="${c === ev.color ? 'on' : ''}"></button>`).join('')}</div>
+    <div class="field">Where<input id="f-loc" placeholder="Location (optional)" value="${esc(ev.location)}" ${dis}></div>
+    <div class="field">Notes<textarea id="f-notes" placeholder="Notes (optional)" ${dis}>${esc(ev.description)}</textarea></div>
+    <div class="actions">
+      ${existing && !ro ? '<button class="btn danger" id="f-del">Delete</button>' : ''}
+      <span class="spacer"></span>
+      <button class="btn" id="f-cancel">${ro ? 'Close' : 'Cancel'}</button>
+      ${ro ? '' : '<button class="btn primary" id="f-save">Save</button>'}
+    </div>`);
+  let color = ev.color;
+  const sync = () => {
+    const ad = $('#f-allday', m).checked, isLocal = $('#f-cal', m).value === 'local';
+    $$('.timed', m).forEach(x => x.style.display = ad ? 'none' : '');
+    $$('.alld', m).forEach(x => x.style.display = ad ? '' : 'none');
+    $('#f-colors', m).style.display = isLocal && !ro ? '' : 'none';
+  };
+  sync();
+  $('#f-allday', m).onchange = sync; $('#f-cal', m).onchange = sync;
+  $('#f-colors', m).onclick = e => { const b = e.target.closest('button'); if (!b) return; color = b.dataset.c; $$('#f-colors button', m).forEach(x => x.classList.toggle('on', x === b)); };
+  $('#f-cancel', m).onclick = closeModal;
+  $('#f-start', m).onchange = () => {
+    const [sh, sm] = $('#f-start', m).value.split(':').map(Number), [eh, em] = $('#f-end', m).value.split(':').map(Number);
+    if (eh * 60 + em <= sh * 60 + sm) { const t = (sh * 60 + sm + 60) % 1440; $('#f-end', m).value = `${pad(Math.floor(t / 60))}:${pad(t % 60)}`; }
+  };
+  if (!existing) setTimeout(() => $('#f-title', m)?.focus(), 50);
+  m.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') $('#f-save', m)?.click(); });
+  const del = $('#f-del', m);
+  if (del) del.onclick = async () => {
+    if (!del.classList.contains('armed')) { del.classList.add('armed'); del.textContent = 'Click again to delete'; return; }
+    del.disabled = true; del.textContent = 'Deleting…';
+    try { await deleteEvent(existing); closeModal(); toast('Event deleted'); }
+    catch (err) { toast('Could not delete: ' + err.message); del.disabled = false; del.textContent = 'Delete'; }
+  };
+  const save = $('#f-save', m);
+  if (save) save.onclick = async () => {
+    const title = $('#f-title', m).value.trim();
+    if (!title) { $('#f-title', m).focus(); toast('Give the event a name'); return; }
+    const allDay = $('#f-allday', m).checked, date = parseYmd($('#f-date', m).value || ymd(new Date()));
+    let start, end;
+    if (allDay) {
+      start = date;
+      const ed = $('#f-enddate', m).value ? parseYmd($('#f-enddate', m).value) : date;
+      end = addDays(ed < date ? date : ed, 1);
+    } else {
+      const [sh, sm] = ($('#f-start', m).value || '09:00').split(':').map(Number);
+      const [eh, em] = ($('#f-end', m).value || '10:00').split(':').map(Number);
+      start = new Date(date); start.setHours(sh, sm);
+      end = new Date(date); end.setHours(eh, em);
+      if (end <= start) end = addDays(end, 1);
+    }
+    const data = { title, allDay, start, end, calId: $('#f-cal', m).value, location: $('#f-loc', m).value.trim(), description: $('#f-notes', m).value.trim(), color };
+    save.disabled = true; save.textContent = 'Saving…';
+    try { await saveEvent(data, existing); closeModal(); toast(existing ? 'Event updated' : 'Event added'); }
+    catch (err) { toast('Could not save: ' + err.message); save.disabled = false; save.textContent = 'Save'; }
+  };
+}
+const wirePayload = d => ({
+  calId: d.calId, title: d.title, allDay: d.allDay, location: d.location, description: d.description,
+  start: d.allDay ? ymd(d.start) : d.start.toISOString(), end: d.allDay ? ymd(d.end) : d.end.toISOString()
+});
+async function saveEvent(d, existing) {
+  if (d.calId === 'local') {
+    const arr = getLocalRaw();
+    const rec = { id: existing?.source === 'local' ? existing.id : uid(), title: d.title, allDay: d.allDay,
+      start: d.allDay ? ymd(d.start) : d.start.toISOString(), end: d.allDay ? ymd(d.end) : d.end.toISOString(),
+      location: d.location, description: d.description, color: d.color };
+    const i = arr.findIndex(x => x.id === rec.id);
+    if (i >= 0) arr[i] = rec; else arr.push(rec);
+    setLocalRaw(arr);
+    if (existing?.source === 'google') await deleteEvent(existing, true);
+  } else if (existing?.source === 'google' && existing.calId === d.calId) {
+    await bridge('update', { ...wirePayload(d), id: existing.id, origStart: existing.origStart, origAllDay: existing.allDay }, true);
+  } else {
+    await bridge('create', wirePayload(d), true);
+    if (existing) await deleteEvent(existing, true);
+  }
+  invalidate(); await loadEvents();
+}
+async function deleteEvent(ev, quiet) {
+  if (ev.source === 'local') setLocalRaw(getLocalRaw().filter(x => x.id !== ev.id));
+  else await bridge('delete', { calId: ev.calId, id: ev.id, origStart: ev.origStart, origAllDay: ev.allDay }, true);
+  if (!quiet) { invalidate(); await loadEvents(); }
+}
+
+/* ================= weather box ================= */
+const WMO = { 0: ['☀️', 'Clear'], 1: ['🌤️', 'Mostly clear'], 2: ['⛅', 'Partly cloudy'], 3: ['☁️', 'Cloudy'], 45: ['🌫️', 'Fog'], 48: ['🌫️', 'Fog'],
+  51: ['🌦️', 'Light drizzle'], 53: ['🌦️', 'Drizzle'], 55: ['🌦️', 'Heavy drizzle'], 56: ['🌧️', 'Freezing drizzle'], 57: ['🌧️', 'Freezing drizzle'],
+  61: ['🌧️', 'Light rain'], 63: ['🌧️', 'Rain'], 65: ['🌧️', 'Heavy rain'], 66: ['🌧️', 'Freezing rain'], 67: ['🌧️', 'Freezing rain'],
+  71: ['🌨️', 'Light snow'], 73: ['🌨️', 'Snow'], 75: ['❄️', 'Heavy snow'], 77: ['🌨️', 'Snow grains'], 80: ['🌦️', 'Showers'], 81: ['🌧️', 'Showers'],
+  82: ['⛈️', 'Heavy showers'], 85: ['🌨️', 'Snow showers'], 86: ['🌨️', 'Snow showers'], 95: ['⛈️', 'Thunderstorms'], 96: ['⛈️', 'Thunderstorms'], 99: ['⛈️', 'Thunderstorms'] };
+const wmo = (c, night) => { const w = WMO[c] || ['🌡️', '—']; return night && (c === 0 || c === 1) ? ['🌙', w[1]] : w; };
+async function loadWeather() {
+  const u = `https://api.open-meteo.com/v1/forecast?latitude=${S.lat}&longitude=${S.lon}` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day` +
+    `&hourly=temperature_2m,weather_code,precipitation_probability,is_day` +
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+    `&temperature_unit=${S.units}&wind_speed_unit=${S.units === 'fahrenheit' ? 'mph' : 'kmh'}&timezone=auto&forecast_days=10`;
+  try {
+    state.weather = await getJSON(u); state.weather.at = Date.now();
+    LS.set('weatherCache', state.weather);
+  } catch (e) { if (!state.weather) state.weather = { error: e.message }; }
+  renderWeather(); renderCalendar();
+}
+function renderWeather() {
+  const w = state.weather, el = $('#wx');
+  $('#wxcity').textContent = S.city.split(',')[0];
+  if (!w) { el.innerHTML = `<div class="empty"><p>Loading weather…</p></div>`; return; }
+  if (w.error || !w.current) { el.innerHTML = `<div class="empty"><div class="bigic">🌧️</div><p>Weather unavailable right now.</p></div>`; return; }
+  const c = w.current, [ic, txt] = wmo(c.weather_code, !c.is_day), unit = S.units === 'fahrenheit' ? 'mph' : 'km/h';
+  const nowIdx = Math.max(0, w.hourly.time.findIndex(t => t >= c.time.slice(0, 13)));
+  const hours = Array.from({ length: 8 }, (_, i) => {
+    const k = nowIdx + i * 2; if (k >= w.hourly.time.length) return '';
+    const hr = +w.hourly.time[k].slice(11, 13), pp = w.hourly.precipitation_probability[k];
+    const lbl = i === 0 ? 'Now' : S.use24h ? `${pad(hr)}h` : `${hr % 12 || 12}${hr < 12 ? 'a' : 'p'}`;
+    return `<div>${lbl}<span class="e">${wmo(w.hourly.weather_code[k], !w.hourly.is_day[k])[0]}</span><b>${Math.round(w.hourly.temperature_2m[k])}°</b><span class="pp">${pp >= 20 ? pp + '%' : ''}</span></div>`;
+  }).join('');
+  const days = w.daily.time.slice(1, 6).map((t, j) => {
+    const i = j + 1, pp = w.daily.precipitation_probability_max[i];
+    return `<div>${parseYmd(t).toLocaleDateString('en-US', { weekday: 'short' })}<span class="e">${wmo(w.daily.weather_code[i])[0]}</span><b>${Math.round(w.daily.temperature_2m_max[i])}°</b> ${Math.round(w.daily.temperature_2m_min[i])}°<span class="pp">${pp >= 20 ? '💧' + pp + '%' : ''}</span></div>`;
+  }).join('');
+  el.innerHTML = `<div class="wxrow"><span class="ic">${ic}</span><span class="t">${Math.round(c.temperature_2m)}°</span><span class="alt">${S.units === 'fahrenheit' ? Math.round((c.temperature_2m - 32) * 5 / 9) + '°C' : Math.round(c.temperature_2m * 9 / 5 + 32) + '°F'}</span>
+      <div class="d">${txt}<small>H ${Math.round(w.daily.temperature_2m_max[0])}° · L ${Math.round(w.daily.temperature_2m_min[0])}° · Feels ${Math.round(c.apparent_temperature)}°</small><small>💧 ${Math.round(c.relative_humidity_2m)}% · 💨 ${Math.round(c.wind_speed_10m)} ${unit}</small></div></div>
+    <div class="hourly">${hours}</div><div class="days">${days}</div>`;
+}
+
+/* ================= ESPN fantasy box ================= */
+async function loadFantasy() {
+  if (!S.espnLeagues || !S.bridgeUrl) { renderBox(); return; }
+  try {
+    const r = await bridge('espn', { leagues: S.espnLeagues });
+    state.fantasy = { leagues: r.leagues || [], at: Date.now() };
+    LS.set('ffCache', state.fantasy);
+  } catch (e) {
+    state.fantasy = { ...(state.fantasy || {}), error: e.message };
+  }
+  renderBox();
+}
+function fantasyPages() {
+  const L = (state.fantasy?.leagues || []);
+  return L.flatMap((lg, i) => lg.error ? [{ i, kind: 'error' }] : [{ i, kind: 'matchups' }, { i, kind: myGame(lg) ? 'mygame' : 'standings' }]);
+}
+function myGame(lg) {
+  const T = Object.fromEntries(lg.teams.map(t => [t.id, t]));
+  const m = lg.matchups.find(m => [m.home, m.away].some(s => s && T[s.teamId] && isMine(T[s.teamId])));
+  if (!m || !m.home || !m.away || !(m.home.lineup || m.away.lineup)) return null;
+  const meHome = isMine(T[m.home.teamId]);
+  return { me: meHome ? m.home : m.away, opp: meHome ? m.away : m.home, T };
+}
+const SLOTS = { 0: 'QB', 1: 'QB', 2: 'RB', 3: 'R/W', 4: 'WR', 5: 'W/T', 6: 'TE', 7: 'OP', 16: 'D/ST', 17: 'K', 18: 'P', 19: 'HC', 23: 'FLX', 24: 'ER' };
+const SLOT_ORDER = [0, 1, 2, 3, 4, 5, 6, 23, 7, 16, 17, 18, 19, 24];
+const POS = { 1: 'QB', 2: 'RB', 3: 'WR', 4: 'TE', 5: 'K', 16: 'D/ST' };
+const NFL = { 1: 'ATL', 2: 'BUF', 3: 'CHI', 4: 'CIN', 5: 'CLE', 6: 'DAL', 7: 'DEN', 8: 'DET', 9: 'GB', 10: 'TEN', 11: 'IND', 12: 'KC', 13: 'LV', 14: 'LAR', 15: 'MIA', 16: 'MIN', 17: 'NE', 18: 'NO', 19: 'NYG', 20: 'NYJ', 21: 'PHI', 22: 'ARI', 23: 'PIT', 24: 'LAC', 25: 'SF', 26: 'SEA', 27: 'TB', 28: 'WSH', 29: 'CAR', 30: 'JAX', 33: 'BAL', 34: 'HOU' };
+const shortName = n => / D\/ST$/.test(n) ? n.replace(' D/ST', '') + ' D' : n.replace(/^(\S)\S*\s+/, '$1. ');
+function renderMyGame(lg, head, foot) {
+  const g = myGame(lg), games = lg.games || {};
+  const status = p => {
+    const gm = games[p.team];
+    if (!gm) return { st: 'bye', txt: 'BYE' };
+    if (gm.s === 'in') return { st: 'in', txt: gm.d };
+    if (gm.s === 'post') return { st: 'post', txt: 'Final' };
+    const d = new Date(gm.date);
+    return { st: 'pre', txt: d.toLocaleDateString('en-US', { weekday: 'short' }) + ' ' + fmtTime(d) };
+  };
+  const cell = (p, right) => {
+    if (!p) return `<div class="pl ${right ? 'r' : ''}"></div>`;
+    const s = status(p);
+    return `<div class="pl ${right ? 'r' : ''}"><b>${esc(shortName(p.name))}</b><small class="${s.st}">${esc(NFL[p.team] || POS[p.pos] || '')} · ${s.st === 'in' ? '● ' : ''}${esc(s.txt)}</small></div>`;
+  };
+  const pts = p => {
+    if (!p) return '<span class="pp"></span>';
+    const s = status(p).st;
+    if (s === 'pre' || (s === 'bye' && !p.pts)) return `<span class="pp proj">${p.proj != null ? fmtPts(p.proj) : '–'}</span>`;
+    return `<span class="pp ${s === 'in' ? 'live' : ''}">${fmtPts(p.pts)}</span>`;
+  };
+  const bySlot = lu => { const o = {}; (lu || []).forEach(p => (o[p.slot] ||= []).push(p)); return o; };
+  const A = bySlot(g.me.lineup), B = bySlot(g.opp.lineup);
+  const slots = [...new Set([...Object.keys(A), ...Object.keys(B)].map(Number))].sort((x, y) => {
+    const ix = SLOT_ORDER.indexOf(x), iy = SLOT_ORDER.indexOf(y); return (ix < 0 ? 99 : ix) - (iy < 0 ? 99 : iy);
+  });
+  let rows = '';
+  slots.forEach(sl => {
+    const a = A[sl] || [], b = B[sl] || [];
+    for (let i = 0; i < Math.max(a.length, b.length); i++)
+      rows += `<div class="lrow">${cell(a[i])}${pts(a[i])}<span class="sl">${SLOTS[sl] || ''}</span>${pts(b[i])}${cell(b[i], true)}</div>`;
+  });
+  const left = lu => (lu || []).filter(p => { const s = status(p).st; return s === 'pre' || s === 'in'; }).length;
+  const tm = g.T[g.me.teamId], to = g.T[g.opp.teamId];
+  const box = (s, t, cls) => `<div class="gs ${cls}"><div class="gn">${teamLogo(t)}<b>${esc(t.name)}</b></div><div class="gv"><span>${fmtPts(s.pts)}</span><small>${left(s.lineup)} left<br>proj ${s.proj != null ? fmtPts(s.proj) : '–'}</small></div></div>`;
+  const top = `<div class="gtop">${box(g.me, tm, g.me.pts >= g.opp.pts ? 'lead' : '')}${box(g.opp, to, 'r ' + (g.opp.pts > g.me.pts ? 'lead' : ''))}</div>`;
+  $('#ff').innerHTML = head + top + `<div class="lineup">${rows}</div>` + foot;
+  const lu = $('#ff .lineup');
+  if (lu && lu.scrollHeight > lu.clientHeight + 2) lu.style.zoom = Math.max(0.6, lu.clientHeight / lu.scrollHeight).toFixed(3);
+}
+function isMine(t) {
+  if (t.mine) return true;
+  const want = (S.espnTeam || '').trim().toLowerCase();
+  return !!want && (t.name.toLowerCase().includes(want) || (t.owner || '').toLowerCase().includes(want));
+}
+function teamLogo(t, cls = 'logo') {
+  const ini = esc((t?.name || '?').replace(/[^A-Za-z0-9 ]/g, '').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2) || '?');
+  return t?.logo ? `<img class="${cls}" src="${esc(t.logo)}" alt="" onerror="this.outerHTML='<span class=&quot;${cls}&quot;>${ini}</span>'">` : `<span class="${cls}">${ini}</span>`;
+}
+const emptyBox = (ic, t, d, btn) => `<div class="empty"><div class="bigic">${ic}</div><h3>${t}</h3><p>${d}</p>${btn ? `<button class="btn primary ctl" data-act="settings">${btn}</button>` : ''}</div>`;
+function renderFantasy(pg) {
+  const el = $('#ff'), empty = emptyBox;
+  if (!S.bridgeUrl) { el.innerHTML = empty('🔌', 'Set up the bridge', 'ESPN scores come through the same Google Apps Script bridge as the calendar. See SETUP.md.', 'Open settings'); return; }
+  if (!S.espnLeagues) { el.innerHTML = empty('🏈', 'Add your ESPN leagues', 'Enter your ESPN league ID(s) in Settings.', 'Open settings'); return; }
+  const f = state.fantasy;
+  if (!f?.leagues) { el.innerHTML = f?.error ? empty('⚠️', 'Couldn’t reach ESPN', esc(f.error)) : `<div class="empty"><p>Loading leagues…</p></div>`; return; }
+  if (!pg) { el.innerHTML = empty('🏈', 'No leagues found', ''); return; }
+  const lg = f.leagues[pg.i];
+  const stale = f.error ? ` · ⚠️ offline` : '';
+  const foot = `<div class="updated">ESPN · updated ${fmtTime(new Date(f.at))}${stale}</div>`;
+  if (pg.kind === 'error') { el.innerHTML = `<div class="lgname">League ${esc(lg.id)}</div>` + empty('⚠️', 'Couldn’t load this league', esc(lg.error)) + foot; return; }
+  const T = Object.fromEntries(lg.teams.map(t => [t.id, t]));
+  const head = `<div class="lgname">${esc(lg.name)}<small>Week ${lg.week}</small></div>`;
+  if (pg.kind === 'mygame') return renderMyGame(lg, `<div class="lgname">${esc(lg.name)}<small>Week ${lg.week} · My game</small></div>`, foot);
+  if (pg.kind === 'standings') {
+    const st = [...lg.teams].sort((a, b) => (b.wins + b.ties / 2) - (a.wins + a.ties / 2) || b.pf - a.pf);
+    el.innerHTML = head + `<div class="sub">Standings</div><table class="stand"><tr><th></th><th>Team</th><th>W-L</th><th>PF</th></tr>` +
+      st.map((t, i) => `<tr class="${isMine(t) ? 'me' : ''}"><td>${i + 1}</td><td class="tn">${esc(t.name)}</td><td class="n">${t.wins}-${t.losses}${t.ties ? '-' + t.ties : ''}</td><td class="n">${fmtPts(t.pf)}</td></tr>`).join('') + '</table>' + foot;
+    return;
+  }
+  const mus = lg.matchups.map(m => ({ ...m, mine: [m.home, m.away].some(s => s && T[s.teamId] && isMine(T[s.teamId])) }));
+  const mine = mus.find(m => m.mine);
+  let h = head;
+  if (mine) {
+    const sides = [mine.home, mine.away].filter(Boolean);
+    const lead = Math.max(...sides.map(s => s.pts));
+    const proj = sides.map(s => s.proj ?? s.pts);
+    const share = sides.length === 2 && proj[0] + proj[1] > 0 ? proj[0] / (proj[0] + proj[1]) * 100 : 50;
+    const meFirst = isMine(T[sides[0].teamId]) ? sides : [...sides].reverse();
+    h += `<div class="big">` + meFirst.map(s => {
+      const t = T[s.teamId] || { name: 'Team ' + s.teamId };
+      return `<div class="tm ${s.pts === lead && lead > 0 ? 'lead' : ''}">${teamLogo(t)}<div class="nm"><b>${esc(t.name)}${isMine(t) ? '<span class="you">YOU</span>' : ''}</b><small>${t.wins ?? 0}-${t.losses ?? 0}${t.owner ? ' · ' + esc(t.owner) : ''}</small></div><div class="pts">${fmtPts(s.pts)}${s.proj != null ? `<small>proj ${fmtPts(s.proj)}</small>` : ''}</div></div>`;
+    }).join('') + (sides.length === 2 && sides.some(s => s.proj != null) ? `<div class="wp"><i style="width:${isMine(T[sides[0].teamId]) ? share : 100 - share}%"></i></div>` : '') + `</div>`;
+  }
+  const rest = mus.filter(m => m !== mine);
+  if (rest.length) {
+    h += `<div class="sub">${mine ? 'Around the league' : 'Matchups'}</div>` + rest.map(m => {
+      const a = m.away, b = m.home, ta = a && T[a.teamId], tb = b && T[b.teamId];
+      if (!a || !b) { const s = a || b, t = T[s.teamId]; return `<div class="mrow">${teamLogo(t)}<span class="n">${esc(t?.name)}</span><span class="p w">${fmtPts(s.pts)}</span><span class="p">BYE</span><span></span><span></span></div>`; }
+      return `<div class="mrow">${teamLogo(ta)}<span class="n">${esc(ta?.name)}</span><span class="p ${a.pts > b.pts ? 'w' : ''}">${fmtPts(a.pts)}</span><span class="p ${b.pts > a.pts ? 'w' : ''}">${fmtPts(b.pts)}</span><span class="n r">${esc(tb?.name)}</span>${teamLogo(tb)}</div>`;
+    }).join('');
+  }
+  if (!lg.matchups.length) h += empty('🗓️', 'No matchups this week', 'The season may be over or on a bye.');
+  el.innerHTML = h + foot;
+}
+/* ================= rotating feature box (fantasy + Disney parks) ================= */
+function boxPages() {
+  const ff = S.showFantasy && S.bridgeUrl && S.espnLeagues && state.fantasy?.leagues ? fantasyPages().map(p => ({ ...p, src: 'ff' })) : [];
+  const pk = S.showParks ? S.parkIds.map(id => ({ src: 'park', id, kind: 'park' })) : [];
+  return [...ff, ...pk];
+}
+function renderBox() {
+  const pages = boxPages(), meta = $('#ffmeta'), title = $('#boxtitle');
+  if (!pages.length) {
+    meta.innerHTML = '';
+    if (S.showParks && !S.showFantasy) { title.textContent = '🏰 Theme parks'; $('#ff').innerHTML = emptyBox('🏰', 'Pick your parks', 'Choose which parks to follow in Settings ▸ Theme parks.', 'Open settings'); }
+    else { title.textContent = '🏈 Fantasy football'; renderFantasy(null); }
+    return;
+  }
+  state.ffPage %= pages.length;
+  const pg = pages[state.ffPage];
+  meta.innerHTML = pages.length > 1 ? `<span class="dots">${pages.map((_, i) => `<i class="${i === state.ffPage ? 'on' : ''}"></i>`).join('')}</span>` : '';
+  title.textContent = pg.src === 'ff' ? '🏈 Fantasy football' : '🏰 Theme parks';
+  if (pg.src === 'ff') renderFantasy(pg); else renderPark(pg);
+}
+
+/* ================= Disney / theme parks (ThemeParks.wiki, free) ================= */
+const TP = 'https://api.themeparks.wiki/';
+async function tp(path) {
+  if (!state.tpBridge) {
+    try { return await getJSON(TP + path); }
+    catch (e) { if (!S.bridgeUrl) throw e; state.tpBridge = true; }
+  }
+  return (await bridge('themeparks', { path })).data;
+}
+async function loadParks(force) {
+  if (!S.showParks || !S.parkIds.length) { renderBox(); return; }
+  await Promise.all(S.parkIds.map(async id => {
+    const p = state.parks[id] ||= { id };
+    try {
+      const live = await tp(`v1/entity/${id}/live`);
+      p.name = live.name || p.name; p.tz = live.timezone || p.tz;
+      p.live = live.liveData || []; p.at = Date.now(); p.error = null;
+      if (force || !p.schedule || Date.now() - (p.schedAt || 0) > 3 * 36e5) {
+        const s = await tp(`v1/entity/${id}/schedule`);
+        p.schedule = s.schedule || []; p.tz = s.timezone || p.tz; p.schedAt = Date.now();
+      }
+    } catch (e) { p.error = e.message; }
+  }));
+  renderBox();
+}
+function renderPark(pg) {
+  const el = $('#ff'), p = state.parks[pg.id] || {};
+  const name = p.name || S.parkNames[pg.id] || 'Park';
+  if (!p.live) { el.innerHTML = `<div class="lgname">${esc(name)}</div>` + (p.error ? emptyBox('⚠️', 'Couldn’t load wait times', esc(p.error)) : '<div class="empty"><p>Loading wait times…</p></div>'); return; }
+  const tz = p.tz || 'America/New_York', now = Date.now();
+  const pt = iso => new Date(iso).toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' }).replace(':00', '').replace(/\s/g, '').toLowerCase();
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: tz });
+  const sched = (p.schedule || []).filter(s => s.openingTime && s.closingTime);
+  const op = sched.find(s => s.date === today && s.type === 'OPERATING');
+  const isOpen = !!op && now >= Date.parse(op.openingTime) && now < Date.parse(op.closingTime);
+  const next = sched.filter(s => s.type === 'OPERATING' && Date.parse(s.openingTime) > now).sort((a, b) => Date.parse(a.openingTime) - Date.parse(b.openingTime))[0];
+  const nextTxt = next ? `Opens ${next.date === today ? 'today' : new Date(next.openingTime).toLocaleDateString('en-US', { timeZone: tz, weekday: 'short' })} ${pt(next.openingTime)}` : 'Closed';
+  const extras = sched.filter(s => s.date === today && s.type !== 'OPERATING')
+    .map(s => `${esc(s.description || (s.type === 'EXTRA_HOURS' ? 'Extra hours' : s.type === 'TICKETED_EVENT' ? 'Special event' : s.type))} ${pt(s.openingTime)}–${pt(s.closingTime)}`);
+  const rides = p.live.filter(x => (x.entityType || 'ATTRACTION') === 'ATTRACTION');
+  const waits = rides.filter(x => x.status === 'OPERATING' && typeof x.queue?.STANDBY?.waitTime === 'number').sort((a, b) => b.queue.STANDBY.waitTime - a.queue.STANDBY.waitTime);
+  const down = rides.filter(x => x.status === 'DOWN');
+  const avg = waits.length ? Math.round(waits.reduce((s, x) => s + x.queue.STANDBY.waitTime, 0) / waits.length) : null;
+  const cls = w => w < 20 ? 'g' : w < 45 ? 'y' : w < 70 ? 'o' : 'r';
+  let h = `<div class="lgname"><span class="open-dot ${isOpen ? '' : 'no'}"></span>${esc(name)}<small>${op ? `${isOpen ? 'Open' : 'Today'} ${pt(op.openingTime)}–${pt(op.closingTime)}` : 'Closed today'}</small></div>`;
+  if (extras.length) h += `<div class="pkx">✨ ${extras.join(' · ')}</div>`;
+  if (!isOpen && !waits.length) {
+    h += emptyBox('🌙', 'Park closed', `${esc(nextTxt)}. Wait times appear when the park opens.`);
+  } else {
+    h += `<div class="pkstats"><div><b>${avg ?? '–'}</b>avg wait (min)</div><div><b>${waits[0]?.queue.STANDBY.waitTime ?? '–'}</b>longest</div><div><b>${down.length}</b>down now</div></div>`;
+    h += `<div class="sub">Longest waits</div><div class="rides">` +
+      waits.map(x => `<div class="ride"><span>${esc(x.name)}</span><b class="wt ${cls(x.queue.STANDBY.waitTime)}">${x.queue.STANDBY.waitTime} min</b></div>`).join('') +
+      down.map(x => `<div class="ride"><span>${esc(x.name)}</span><b class="wt x">Down</b></div>`).join('') + '</div>';
+  }
+  el.innerHTML = h + `<div class="updated">ThemeParks.wiki · updated ${fmtTime(new Date(p.at))}${p.error ? ' · ⚠️ offline' : ''}</div>`;
+}
+
+let ffTimer;
+function scheduleFfRotate() {
+  clearTimeout(ffTimer);
+  const pages = boxPages();
+  if (pages.length < 2) { ffTimer = null; return; }
+  const cur = pages[state.ffPage % pages.length];
+  const secs = cur?.kind === 'standings' ? Math.max(8, S.rotateSecs / 2) : S.rotateSecs;
+  ffTimer = setTimeout(() => { state.ffPage = (state.ffPage + 1) % Math.max(1, boxPages().length); renderBox(); scheduleFfRotate(); }, secs * 1000);
+}
+
+/* ================= settings ================= */
+function openSettings() {
+  const m = openModal(`
+    <h2>Settings</h2>
+    <h3>🔌 Google bridge (calendar + ESPN)</h3>
+    <p class="help">Paste the web-app URL from your Google Apps Script deployment and the <code>SECRET</code> you set in <code>Code.gs</code>. See SETUP.md.</p>
+    <div class="field">Bridge URL<input id="s-url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.bridgeUrl)}"></div>
+    <div class="field">Secret key<input id="s-key" type="password" value="${esc(S.bridgeKey)}"></div>
+    <div class="actions" style="margin-top:0"><button class="btn" id="s-test">Connect &amp; load calendars</button>${S.bridgeUrl ? '<button class="btn danger" id="s-disc">Disconnect</button>' : ''}</div>
+    <div class="status" id="s-status"></div>
+    <div id="s-cals"></div>
+
+    <h3>🏈 ESPN fantasy football</h3>
+    <p class="help">League ID = the number after <code>leagueId=</code> in your league's URL on fantasy.espn.com. Separate several leagues with commas. Private leagues also need your ESPN cookies in <code>Code.gs</code> — that also lets the display spot your team automatically.</p>
+    <div class="row"><div class="field" style="flex:2">League ID(s)<input id="s-espn" value="${esc(S.espnLeagues)}" placeholder="12345678, 87654321"></div>
+      <div class="field">Your team name (optional)<input id="s-team" value="${esc(S.espnTeam)}"></div></div>
+    <div class="row"><div class="field">Switch between leagues / standings every<select id="s-rot">${[10, 15, 20, 30, 60].map(v => `<option value="${v}" ${S.rotateSecs == v ? 'selected' : ''}>${v} seconds</option>`).join('')}</select></div></div>
+    <div class="actions" style="margin-top:0"><button class="btn" id="s-ffcheck">Test ESPN</button></div>
+    <div class="status" id="s-ffstatus"></div>
+
+    <h3>🏰 Theme parks</h3>
+    <p class="help">Live wait times and park hours from ThemeParks.wiki (free, no account). The right-hand box rotates between your fantasy leagues and the parks you pick.</p>
+    <label class="check"><input type="checkbox" id="s-showff" ${S.showFantasy ? 'checked' : ''}> Show fantasy football</label>
+    <label class="check"><input type="checkbox" id="s-showpk" ${S.showParks ? 'checked' : ''}> Show theme parks</label>
+    <div class="actions" style="margin-top:0"><button class="btn" id="s-pkload">Choose parks…</button><label class="check" style="margin:0"><input type="checkbox" id="s-pkall"> Include non-Disney parks</label></div>
+    <div class="status" id="s-pkstatus">${S.parkIds.length ? 'Following: ' + S.parkIds.map(id => esc(S.parkNames[id] || id)).join(', ') : ''}</div>
+    <div id="s-pklist" class="callist"></div>
+
+    <h3>🖼️ Background</h3>
+    <div class="row" style="align-items:center">
+      <div class="bgprev" id="s-bgprev" style="${state.bg ? `background-image:url('${state.bg.data}')` : ''}"></div>
+      <div class="actions" style="margin:0;flex:3"><label class="btn" style="cursor:pointer">Choose image…<input type="file" id="s-bgfile" accept="image/*" hidden></label><button class="btn danger" id="s-bgrm" ${state.bg ? '' : 'disabled'}>Remove</button></div>
+    </div>
+    <div class="status" id="s-bgstatus"></div>
+    <div class="row">
+      <div class="field">Box opacity: <span id="s-opv">${S.boxOpacity}%</span><input type="range" id="s-op" min="15" max="100" step="1" value="${S.boxOpacity}"></div>
+      <div class="field">Boxes over photo<select id="s-bgtheme">${[['auto', 'Auto (match photo)'], ['light', 'Light'], ['dark', 'Dark']].map(([v, l]) => `<option value="${v}" ${S.bgTheme === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    </div>
+    <label class="check"><input type="checkbox" id="s-blur" ${S.boxBlur ? 'checked' : ''}> Frosted-glass blur behind boxes</label>
+    <div class="field">YouTube video or playlist (plays full-screen behind everything, on repeat)<input id="s-yt" placeholder="https://www.youtube.com/watch?v=…" value="${esc(S.ytUrl)}"></div>
+    ${location.protocol === 'file:' ? '<div class="warn">⚠️ This page is open as a local file, where YouTube won’t play. Open it from your GitHub Pages (https://…) address instead — see SETUP.md section 1.</div>' : ''}
+    <label class="check"><input type="checkbox" id="s-ytsound" ${S.ytSound ? 'checked' : ''}> Try to start with sound (Chrome usually requires a click first — use the 🔇 button)</label>
+    <div class="status" id="s-ytstatus"></div>
+
+    <h3>🌤️ Weather</h3>
+    <div class="row"><div class="field" style="flex:3">City or ZIP<input id="s-city" value="${esc(S.city)}"></div>
+      <div class="field" style="flex:1">Units<select id="s-units"><option value="fahrenheit" ${S.units === 'fahrenheit' ? 'selected' : ''}>°F</option><option value="celsius" ${S.units === 'celsius' ? 'selected' : ''}>°C</option></select></div></div>
+    <div class="actions" style="margin-top:0"><button class="btn" id="s-geo">Look up city</button><button class="btn" id="s-here">Use this computer's location</button></div>
+    <div class="status" id="s-wxstatus">${S.lat.toFixed(3)}, ${S.lon.toFixed(3)}</div>
+
+    <h3>🖥️ Display</h3>
+    <div class="row"><div class="field">Hub name<input id="s-title" value="${esc(S.title)}"></div>
+      <div class="field">Default view<select id="s-dv">${['day', 'week', 'month'].map(v => `<option value="${v}" ${S.defaultView === v ? 'selected' : ''}>${v[0].toUpperCase() + v.slice(1)}</option>`).join('')}</select></div>
+      <div class="field">Week starts<select id="s-ws"><option value="0" ${S.weekStart == 0 ? 'selected' : ''}>Sunday</option><option value="1" ${S.weekStart == 1 ? 'selected' : ''}>Monday</option></select></div></div>
+    <div class="row"><div class="field">Show hours from<select id="s-dsh">${Array.from({ length: 13 }, (_, h) => `<option value="${h}" ${S.dayStartHour == h ? 'selected' : ''}>${fmtHourLabel(h)}</option>`).join('')}</select></div>
+      <div class="field">to<select id="s-deh">${Array.from({ length: 12 }, (_, i) => i + 13).map(h => `<option value="${h}" ${S.dayEndHour == h ? 'selected' : ''}>${h === 24 ? 'Midnight' : fmtHourLabel(h)}</option>`).join('')}</select></div>
+      <div class="field">Night mode<select id="s-night">${['auto', 'off', 'on'].map(v => `<option value="${v}" ${S.night === v ? 'selected' : ''}>${{ auto: 'Auto (9pm–6am)', off: 'Always light', on: 'Always dark' }[v]}</option>`).join('')}</select></div></div>
+    <label class="check"><input type="checkbox" id="s-24" ${S.use24h ? 'checked' : ''}> 24-hour clock</label>
+    <div class="actions" style="margin-top:0"><button class="btn danger" id="s-clearlocal">Delete display-only &amp; sample events</button></div>
+    <h3>🎵 Spotify</h3>
+    <p class="help">Browse your playlists, albums and liked songs and play them on your speakers. Needs Spotify Premium and a free Spotify developer app (see “Spotify” in SETUP.md). In the Spotify dashboard, set the Redirect URI to exactly:<br><code id="s-spredir">${esc(spRedirect())}</code></p>
+    ${location.protocol !== 'https:' ? '<div class="warn">⚠️ Spotify sign-in needs the page opened from its GitHub Pages (https://…) address, not a local file.</div>' : ''}
+    <div class="row"><div class="field" style="flex:2">Client ID<input id="s-spid" value="${esc(S.spClientId)}" placeholder="32-character ID from the Spotify dashboard"></div>
+      <div class="field">Play on speaker / group<input id="s-spdev" value="${esc(S.spDevice)}"></div></div>
+    <div class="actions" style="margin-top:0"><button class="btn" id="s-spconnect">${state.spTok ? 'Reconnect Spotify' : 'Connect Spotify'}</button>${state.spTok ? '<button class="btn danger" id="s-spdisc">Disconnect</button>' : ''}</div>
+    <div class="status" id="s-spstatus">${state.spTok ? 'Connected.' : ''}</div>
+
+    <h3>📲 Install as an app</h3>
+    <p class="help">Installing opens Family Hub in its own window with no browser bars — ideal for a Chromebook display.</p>
+    <div class="actions" style="margin-top:0"><button class="btn primary" id="s-install" ${installPrompt ? '' : 'disabled'}>Install Family Hub</button></div>
+    <div class="status" id="s-installst">${installPrompt ? '' : (matchMedia('(display-mode: standalone)').matches ? 'Already running as an installed app.' : 'If the button is greyed out: Chrome menu ⋮ ▸ “Cast, save and share” ▸ “Install page as app…”. Works only from the https:// address.')}</div>
+
+    <h3>💾 Backup</h3>
+    <p class="help">Save all settings (bridge, leagues, parks, background, display-only events) to a file, then load it on another computer or after moving the page to a new address.</p>
+    <div class="actions" style="margin-top:0"><button class="btn" id="s-export">Export settings</button><label class="btn" style="cursor:pointer">Import settings…<input type="file" id="s-import" accept=".json,application/json" hidden></label></div>
+    <div class="status" id="s-iostatus"></div>
+
+    <div class="actions" style="margin-top:22px"><span class="spacer"></span><button class="btn" id="s-cancel">Cancel</button><button class="btn primary" id="s-save">Save</button></div>`, 'wide');
+
+  let lat = S.lat, lon = S.lon, sel = new Set(selectedCalIds()), defCal = S.defaultCal;
+  const status = (el, msg, ok) => { el.textContent = msg; el.className = 'status ' + (ok === true ? 'ok' : ok === false ? 'err' : ''); };
+  const readBridge = () => { S.bridgeUrl = $('#s-url', m).value.trim(); S.bridgeKey = $('#s-key', m).value.trim(); return /^https:\/\/script\.google(usercontent)?\.com\/.*\/exec$/.test(S.bridgeUrl); };
+  const drawCals = () => {
+    if (!state.calendars.length) { $('#s-cals', m).innerHTML = ''; return; }
+    $('#s-cals', m).innerHTML = `<div class="field" style="margin:0">Show these calendars</div><div class="callist">${state.calendars.map(c =>
+      `<label><input type="checkbox" data-cal="${esc(c.id)}" ${sel.has(c.id) ? 'checked' : ''}><span class="dot" style="background:${c.color}"></span>${esc(c.name)}${c.writable === false ? ' <small style="color:var(--muted)">(read-only)</small>' : ''}</label>`).join('')}</div>
+      <div class="field">New events go to<select id="s-defcal">${writableCals().map(c => `<option value="${esc(c.id)}" ${(defCal || state.calendars.find(x => x.primary)?.id) === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}<option value="local" ${defCal === 'local' ? 'selected' : ''}>This display only</option></select></div>`;
+    $$('[data-cal]', m).forEach(cb => cb.onchange = () => cb.checked ? sel.add(cb.dataset.cal) : sel.delete(cb.dataset.cal));
+    $('#s-defcal', m).onchange = e => defCal = e.target.value;
+  };
+  if (S.bridgeUrl) drawCals();
+  $('#s-test', m).onclick = async () => {
+    const st = $('#s-status', m);
+    if (!readBridge()) { status(st, /\/dev$/.test(S.bridgeUrl) ? 'That’s the /dev test link, which only works inside the script editor. Use Deploy ▸ New deployment ▸ Web app and copy the URL ending in /exec.' : 'That doesn’t look like an Apps Script web-app URL (it should end in /exec).', false); return; }
+    status(st, 'Connecting…');
+    try {
+      const first = !state.calendars.length;
+      await loadCalendars();
+      if (first || !Array.isArray(S.selectedCals)) sel = new Set(state.calendars.filter(c => !c.hidden).map(c => c.id));
+      drawCals(); status(st, `Connected — found ${state.calendars.length} calendars.`, true);
+    } catch (e) { status(st, 'Could not connect: ' + e.message, false); }
+  };
+  $('#s-ffcheck', m).onclick = async () => {
+    const st = $('#s-ffstatus', m);
+    if (!readBridge()) { status(st, 'Set up the bridge URL first.', false); return; }
+    const ids = $('#s-espn', m).value.replace(/\s/g, '');
+    if (!ids) { status(st, 'Enter a league ID first.', false); return; }
+    status(st, 'Asking ESPN… (can take ~10 seconds)');
+    try {
+      const r = await bridge('espn', { leagues: ids, nocache: 1 });
+      const ok = r.leagues.filter(l => !l.error), bad = r.leagues.filter(l => l.error);
+      const mine = ok.flatMap(l => l.teams.filter(t => t.mine).map(t => t.name));
+      status(st, [ok.length ? `✓ ${ok.map(l => l.name).join(', ')}` : '', mine.length ? `Your team: ${mine.join(', ')}` : '', ...bad.map(l => `League ${l.id}: ${l.error}`)].filter(Boolean).join(' · '), !bad.length);
+    } catch (e) { status(st, 'Failed: ' + e.message, false); }
+  };
+  const disc = $('#s-disc', m);
+  if (disc) disc.onclick = () => { S.bridgeUrl = ''; S.bridgeKey = ''; S.selectedCals = null; state.calendars = []; LS.set('calendars', []); saveSettings(); invalidate(); closeModal(); loadEvents(); renderBox(); toast('Bridge disconnected'); };
+  $('#s-geo', m).onclick = async () => {
+    const st = $('#s-wxstatus', m), q = $('#s-city', m).value.trim(); if (!q) return;
+    status(st, 'Looking up…');
+    try {
+      const isZip = /^\d{5}$/.test(q);
+      const r = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q.split(',')[0].trim())}&count=10&language=en${isZip ? '&countryCode=US' : ''}`);
+      const qual = q.includes(',') ? q.split(',').slice(1).join(',').trim().toLowerCase() : '';
+      const hit = (qual && r.results?.find(x => [x.admin1, x.admin1_code, x.country, x.country_code].some(v => v && (v.toLowerCase() === qual || v.toLowerCase().startsWith(qual))))) || r.results?.[0];
+      if (!hit) throw new Error('No match');
+      lat = hit.latitude; lon = hit.longitude;
+      $('#s-city', m).value = `${hit.name}${hit.admin1 ? ', ' + hit.admin1 : ''}`;
+      status(st, `Found ${hit.name}, ${hit.admin1 || hit.country}`, true);
+    } catch (e) { status(st, 'Lookup failed: ' + e.message, false); }
+  };
+  $('#s-here', m).onclick = () => {
+    const st = $('#s-wxstatus', m);
+    if (!navigator.geolocation) return status(st, 'Location not available', false);
+    status(st, 'Getting location…');
+    navigator.geolocation.getCurrentPosition(p => { lat = p.coords.latitude; lon = p.coords.longitude; status(st, `Using ${lat.toFixed(3)}, ${lon.toFixed(3)}`, true); },
+      e => status(st, 'Location denied: ' + e.message, false), { timeout: 15000 });
+  };
+  const cl = $('#s-clearlocal', m);
+  cl.onclick = () => {
+    if (!cl.classList.contains('armed')) { cl.classList.add('armed'); cl.textContent = 'Click again to confirm'; return; }
+    setLocalRaw([]); loadEvents(); cl.textContent = 'Deleted'; cl.disabled = true;
+  };
+  // Theme parks picker
+  let pkSel = new Set(S.parkIds), pkNames = { ...S.parkNames }, dests = null;
+  const drawParks = () => {
+    if (!dests) return;
+    const all = $('#s-pkall', m).checked;
+    const list = dests.filter(d => all || /disney/i.test(d.name)).flatMap(d => (d.parks || []).map(pk => ({ ...pk, dest: d.name })));
+    $('#s-pklist', m).innerHTML = list.map(pk => `<label><input type="checkbox" data-pk="${esc(pk.id)}" data-nm="${esc(pk.name)}" ${pkSel.has(pk.id) ? 'checked' : ''}>${esc(pk.name)} <small style="color:var(--muted)">${esc(pk.dest)}</small></label>`).join('');
+    $$('[data-pk]', m).forEach(cb => cb.onchange = () => { if (cb.checked) { pkSel.add(cb.dataset.pk); pkNames[cb.dataset.pk] = cb.dataset.nm; $('#s-showpk', m).checked = true; } else pkSel.delete(cb.dataset.pk); });
+  };
+  $('#s-pkload', m).onclick = async () => {
+    const st = $('#s-pkstatus', m); status(st, 'Loading park list…');
+    try { dests = (await tp('v1/destinations')).destinations || []; status(st, 'Tick the parks to follow:', true); drawParks(); }
+    catch (e) { status(st, 'Couldn’t load parks: ' + e.message, false); }
+  };
+  $('#s-pkall', m).onchange = drawParks;
+
+  // Background & transparency (previewed live)
+  const bgSt = $('#s-bgstatus', m);
+  $('#s-bgfile', m).onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    status(bgSt, 'Preparing image…');
+    try {
+      state.bg = await processBg(f);
+      $('#s-bgprev', m).style.backgroundImage = `url('${state.bg.data}')`; $('#s-bgrm', m).disabled = false;
+      if (S.boxOpacity >= 100) { S.boxOpacity = 72; $('#s-op', m).value = 72; $('#s-opv', m).textContent = '72%'; }
+      applyLook(); status(bgSt, 'Background set.', true);
+    } catch (err) { status(bgSt, err.message, false); }
+  };
+  $('#s-bgrm', m).onclick = () => { try { localStorage.removeItem('hub.bg'); } catch {} state.bg = null; $('#s-bgprev', m).style.backgroundImage = ''; $('#s-bgrm', m).disabled = true; applyLook(); status(bgSt, 'Background removed.'); };
+  $('#s-op', m).oninput = e => { S.boxOpacity = +e.target.value; $('#s-opv', m).textContent = S.boxOpacity + '%'; applyLook(); };
+  $('#s-blur', m).onchange = e => { S.boxBlur = e.target.checked; applyLook(); };
+  $('#s-bgtheme', m).onchange = e => { S.bgTheme = e.target.value; applyLook(); };
+
+  $('#s-yt', m).onchange = e => { const v = e.target.value.trim(); status($('#s-ytstatus', m), !v ? '' : parseYouTube(v) ? 'Looks good — it starts when you save.' : 'That doesn’t look like a YouTube video or playlist link.', !v ? undefined : !!parseYouTube(v)); };
+  $('#s-export', m).onclick = () => {
+    const dump = { app: 'family-hub', v: 1, settings: S, bg: state.bg, localEvents: getLocalRaw() };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(dump)], { type: 'application/json' }));
+    a.download = 'family-hub-settings.json'; document.body.appendChild(a); a.click(); a.remove();
+    status($('#s-iostatus', m), 'Saved family-hub-settings.json to your Downloads folder. It contains your bridge key — keep it private.', true);
+  };
+  $('#s-import', m).onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (d.app !== 'family-hub' || !d.settings) throw new Error('Not a Family Hub settings file');
+      LS.set('settings', d.settings); LS.set('localEvents', d.localEvents || []); LS.set('seeded', true);
+      if (d.bg) { try { localStorage.setItem('hub.bg', JSON.stringify(d.bg)); } catch { } }
+      status($('#s-iostatus', m), 'Imported — reloading…', true); setTimeout(() => location.reload(), 800);
+    } catch (err) { status($('#s-iostatus', m), 'Import failed: ' + err.message, false); }
+  };
+  $('#s-spconnect', m).onclick = () => {
+    const st = $('#s-spstatus', m), id = $('#s-spid', m).value.trim();
+    if (location.protocol !== 'https:') { status(st, 'Open the page from its https:// GitHub Pages address first.', false); return; }
+    if (!/^[0-9a-f]{32}$/i.test(id)) { status(st, 'That doesn’t look like a Spotify Client ID (32 letters/numbers).', false); return; }
+    S.spClientId = id; S.spDevice = $('#s-spdev', m).value.trim() || 'surrounded'; saveSettings();
+    spLogin();
+  };
+  const spd = $('#s-spdisc', m);
+  if (spd) spd.onclick = () => { state.spTok = null; LS.set('spTok', null); renderSpBar(); status($('#s-spstatus', m), 'Disconnected.'); spd.remove(); };
+  $('#s-install', m).onclick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt(); const r = await installPrompt.userChoice; installPrompt = null;
+    status($('#s-installst', m), r.outcome === 'accepted' ? 'Installed! Open “Family Hub” from your launcher.' : 'Install cancelled.', r.outcome === 'accepted');
+  };
+  $('#s-cancel', m).onclick = () => { S = Object.assign({}, DEFAULTS, LS.get('settings', {})); applyLook(); closeModal(); };
+  $('#s-save', m).onclick = () => {
+    const old = JSON.stringify([S.espnLeagues, S.bridgeUrl]), oldWx = `${S.lat},${S.lon},${S.units}`;
+    Object.assign(S, {
+      bridgeUrl: $('#s-url', m).value.trim(), bridgeKey: $('#s-key', m).value.trim(),
+      selectedCals: state.calendars.length ? [...sel] : S.selectedCals, defaultCal: defCal || '',
+      espnLeagues: $('#s-espn', m).value.replace(/\s/g, ''), espnTeam: $('#s-team', m).value.trim(), rotateSecs: +$('#s-rot', m).value,
+      city: $('#s-city', m).value.trim() || 'Home', lat, lon, units: $('#s-units', m).value,
+      title: $('#s-title', m).value.trim(), defaultView: $('#s-dv', m).value, weekStart: +$('#s-ws', m).value,
+      dayStartHour: +$('#s-dsh', m).value, dayEndHour: +$('#s-deh', m).value, night: $('#s-night', m).value, use24h: $('#s-24', m).checked,
+      showFantasy: $('#s-showff', m).checked, showParks: $('#s-showpk', m).checked, parkIds: [...pkSel], parkNames: pkNames,
+      boxOpacity: +$('#s-op', m).value, boxBlur: $('#s-blur', m).checked, bgTheme: $('#s-bgtheme', m).value,
+      ytUrl: $('#s-yt', m).value.trim(), ytSound: $('#s-ytsound', m).checked,
+      spClientId: $('#s-spid', m).value.trim(), spDevice: $('#s-spdev', m).value.trim() || 'surrounded'
+    });
+    saveSettings(); closeModal(); invalidate();
+    state.view = S.defaultView;
+    applyNight(); tick(); loadEvents();
+    if (old !== JSON.stringify([S.espnLeagues, S.bridgeUrl])) { state.fantasy = null; state.ffPage = 0; renderBox(); loadFantasy().then(scheduleFfRotate); } else renderBox();
+    if (oldWx !== `${S.lat},${S.lon},${S.units}`) loadWeather(); else renderWeather();
+    applyLook(); renderSpBar(); state.ffPage = 0; loadParks(true).then(scheduleFfRotate);
+    toast('Settings saved');
+  };
+}
+
+/* ================= Spotify (simple version) ================= */
+// Uses Spotify's Web API with PKCE sign-in (no secret needed). Plays on the speaker/group named in
+// Settings when Spotify can see it; Google Cast groups only show up after something has been
+// played on them from the Spotify app recently.
+const SP_SCOPES = 'user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative user-library-read';
+const spRedirect = () => location.origin + location.pathname;
+state.spTok = LS.get('spTok', null);
+state.sp = null;
+const b64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+async function spLogin() {
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(64)));
+  const challenge = b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
+  const st = uid();
+  LS.set('spPkce', { verifier, state: st });
+  location.href = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+    client_id: S.spClientId, response_type: 'code', redirect_uri: spRedirect(),
+    code_challenge_method: 'S256', code_challenge: challenge, scope: SP_SCOPES, state: st
+  });
+}
+function spSaveTok(j) {
+  state.spTok = { access: j.access_token, refresh: j.refresh_token || state.spTok?.refresh, exp: Date.now() + ((j.expires_in || 3600) - 60) * 1000 };
+  LS.set('spTok', state.spTok);
+}
+async function spHandleRedirect() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('code') && !q.has('error')) return;
+  history.replaceState(null, '', location.pathname);
+  const pk = LS.get('spPkce', null); LS.set('spPkce', null);
+  if (q.get('error')) { toast('Spotify sign-in was cancelled'); return; }
+  if (!pk || pk.state !== q.get('state')) { toast('Spotify sign-in failed — please try again'); return; }
+  try {
+    const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: S.spClientId, grant_type: 'authorization_code', code: q.get('code'), redirect_uri: spRedirect(), code_verifier: pk.verifier }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error_description || j.error || 'HTTP ' + r.status);
+    spSaveTok(j); toast('Spotify connected 🎵');
+  } catch (e) { toast('Spotify sign-in failed: ' + e.message); }
+}
+async function spToken() {
+  const t = state.spTok;
+  if (!t) throw new Error('Spotify isn’t connected');
+  if (Date.now() < t.exp) return t.access;
+  const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: t.refresh, client_id: S.spClientId }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (r.status === 400) { state.spTok = null; LS.set('spTok', null); renderSpBar(); throw new Error('Spotify sign-in expired — reconnect in Settings'); }
+    throw new Error('Spotify: ' + (j.error_description || r.status));
+  }
+  spSaveTok(j); return state.spTok.access;
+}
+async function sp(path, opts = {}, retry = true) {
+  const tok = await spToken();
+  const r = await fetch('https://api.spotify.com/v1' + path, { ...opts, headers: { Authorization: 'Bearer ' + tok, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) } });
+  if (r.status === 401 && retry) { state.spTok.exp = 0; return sp(path, opts, false); }
+  const text = await r.text(); let j = null; try { j = text ? JSON.parse(text) : null; } catch {}
+  if (!r.ok) {
+    const e = new Error(j?.error?.reason === 'PREMIUM_REQUIRED' ? 'Spotify Premium is required to control playback'
+      : r.status === 404 ? 'No active speaker — start something in the Spotify app first'
+      : r.status === 429 ? 'Spotify is busy — try again in a minute' : (j?.error?.message || 'Spotify error ' + r.status));
+    e.status = r.status; throw e;
+  }
+  return j;
+}
+const spOn = () => !!(S.spClientId && state.spTok);
+async function spRefreshNow() {
+  if (!spOn()) return;
+  try { state.sp = await sp('/me/player') || { is_playing: false }; } catch (e) { state.sp = { error: e.message }; }
+  renderSpBar(); if ($('.modal.spot')) renderSpNow();
+}
+function spItemInfo(p) {
+  const it = p?.item; if (!it) return null;
+  return { title: it.name, by: (it.artists || []).map(a => a.name).join(', ') || it.show?.name || '', art: (it.album?.images || it.images || []).slice(-1)[0]?.url || (it.album?.images || [])[0]?.url, artBig: (it.album?.images || it.images || [])[0]?.url };
+}
+function renderSpBar() {
+  const bar = $('#spbar'), on = !!S.spClientId;
+  bar.classList.toggle('on', on); $('main').classList.toggle('sp', on);
+  if (!on) return;
+  const now = $('#spnow');
+  if (!state.spTok) { now.innerHTML = `<span class="t" style="color:var(--muted)">Not connected — open Settings ▸ Spotify</span>`; return; }
+  const p = state.sp, info = spItemInfo(p);
+  if (p?.error) now.innerHTML = `<span class="t" style="color:var(--muted)">${esc(p.error)}</span>`;
+  else if (!info) now.innerHTML = `<span class="t" style="color:var(--muted)">Nothing playing</span>`;
+  else now.innerHTML = `${info.art ? `<img src="${esc(info.art)}" alt="">` : ''}<span class="t">${p.is_playing ? '' : '⏸ '}${esc(info.title)}<small>${esc(info.by)}${p.device?.name ? ' · on ' + esc(p.device.name) : ''}</small></span>`;
+  $('#sp-play').textContent = p?.is_playing ? '⏸' : '▶';
+  if (on && !$('main').dataset.fit) { $('main').dataset.fit = 1; renderCalendar(); }
+}
+async function spCmd(kind) {
+  try {
+    const p = state.sp || {};
+    if (kind === 'play') {
+      if (p.is_playing) await sp('/me/player/pause', { method: 'PUT' });
+      else await sp('/me/player/play' + (p.device?.id ? '?device_id=' + encodeURIComponent(p.device.id) : ''), { method: 'PUT' });
+    } else await sp('/me/player/' + kind, { method: 'POST' });
+  } catch (e) { toast(e.message); }
+  setTimeout(spRefreshNow, 700);
+}
+async function spDevices() { return (await sp('/me/player/devices'))?.devices || []; }
+let spLib = { tab: 'playlists', playlists: null, albums: null, devices: [] };
+async function openSpotify() {
+  if (!S.spClientId || !state.spTok) { openSettings(); setTimeout(() => $('#s-spid')?.scrollIntoView({ block: 'center' }), 50); return; }
+  openModal(`<h2>🎵 Spotify</h2><div id="sp-now"></div>
+    <div class="sptabs"><button data-sptab="playlists">Playlists</button><button data-sptab="albums">Albums</button>
+      <select id="sp-dev" title="Play on"></select><button class="btn" id="sp-devref" title="Look for speakers again" style="padding:7px 10px">⟳</button></div>
+    <div class="status" id="sp-msg"></div><div class="spgrid" id="sp-grid"></div>
+    <div class="actions"><span class="spacer"></span><button class="btn" id="sp-close">Close</button></div>`, 'spot');
+  $('#sp-close').onclick = closeModal;
+  $$('[data-sptab]').forEach(b => b.onclick = () => { spLib.tab = b.dataset.sptab; drawSpGrid(); });
+  $('#sp-devref').onclick = () => loadSpDevices(true);
+  $('#sp-grid').onclick = e => { const b = e.target.closest('[data-play]'); if (b) spPlay(b.dataset.play, b.dataset.name); };
+  $('#sp-now').onclick = e => { const b = e.target.closest('[data-cmd]'); if (b) spCmd(b.dataset.cmd); };
+  renderSpNow(); spRefreshNow(); loadSpDevices(); drawSpGrid();
+}
+function renderSpNow() {
+  const el = $('#sp-now'); if (!el) return;
+  const p = state.sp, info = spItemInfo(p);
+  el.innerHTML = `<div class="spbig">${info?.artBig ? `<img src="${esc(info.artBig)}" alt="">` : '<div class="ph"></div>'}
+    <div class="info"><b>${info ? esc(info.title) : 'Nothing playing'}</b><small>${info ? esc(info.by) : 'Pick something below'}</small><small>${p?.device?.name ? '🔊 ' + esc(p.device.name) : ''}</small></div>
+    <button class="c" data-cmd="previous" title="Previous">⏮</button><button class="c pp" data-cmd="play" title="Play/pause">${p?.is_playing ? '⏸' : '▶'}</button><button class="c" data-cmd="next" title="Next">⏭</button></div>`;
+}
+async function loadSpDevices(manual) {
+  const sel = $('#sp-dev'), msg = $('#sp-msg'); if (!sel) return;
+  try {
+    spLib.devices = await spDevices();
+    const want = (S.spDevice || '').toLowerCase();
+    const target = spLib.devices.find(d => d.name.toLowerCase() === want);
+    const pick = target || spLib.devices.find(d => d.is_active) || spLib.devices[0];
+    sel.innerHTML = spLib.devices.length ? spLib.devices.map(d => `<option value="${esc(d.id)}" ${pick && d.id === pick.id ? 'selected' : ''}>🔊 ${esc(d.name)}</option>`).join('') : '<option value="">No speakers found</option>';
+    msg.className = 'status';
+    msg.textContent = target ? '' : `“${S.spDevice}” isn’t available right now. Play anything on it once from the Spotify app on your phone, then press ⟳.${spLib.devices.length ? ' Or pick another speaker.' : ''}`;
+    if (manual && target) toast(`Found “${target.name}”`);
+  } catch (e) { msg.className = 'status err'; msg.textContent = e.message; }
+}
+async function drawSpGrid() {
+  const g = $('#sp-grid'); if (!g) return;
+  $$('[data-sptab]').forEach(b => b.classList.toggle('on', b.dataset.sptab === spLib.tab));
+  const tile = (uri, img, name, sub) => `<button data-play="${esc(uri)}" data-name="${esc(name)}">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : '<span class="ph">🎵</span>'}<b>${esc(name)}</b><small>${esc(sub)}</small></button>`;
+  try {
+    if (spLib.tab === 'playlists') {
+      if (!spLib.playlists) {
+        g.innerHTML = '<p class="help">Loading…</p>';
+        const a = await sp('/me/playlists?limit=50'), b = a?.next ? await sp('/me/playlists?limit=50&offset=50') : null;
+        spLib.playlists = [...(a?.items || []), ...(b?.items || [])].filter(Boolean);
+      }
+      g.innerHTML = `<button data-play="liked" data-name="Liked Songs"><span class="ph" style="background:linear-gradient(135deg,#4b2bd6,#8fd2c5);color:#fff">♥</span><b>Liked Songs</b><small>Your saved tracks</small></button>` +
+        spLib.playlists.map(pl => tile(pl.uri, pl.images?.[0]?.url, pl.name, pl.owner?.display_name ? 'by ' + pl.owner.display_name : 'Playlist')).join('');
+    } else {
+      if (!spLib.albums) { g.innerHTML = '<p class="help">Loading…</p>'; spLib.albums = ((await sp('/me/albums?limit=50'))?.items || []).map(x => x.album).filter(Boolean); }
+      g.innerHTML = spLib.albums.length ? spLib.albums.map(al => tile(al.uri, al.images?.[1]?.url || al.images?.[0]?.url, al.name, (al.artists || []).map(a => a.name).join(', '))).join('') : '<p class="help">No saved albums.</p>';
+    }
+  } catch (e) { g.innerHTML = `<p class="status err">${esc(e.message)}</p>`; }
+}
+async function spPlay(uri, name) {
+  const msg = $('#sp-msg');
+  try {
+    let dev = $('#sp-dev')?.value;
+    if (!dev) { await loadSpDevices(); dev = $('#sp-dev')?.value; }
+    if (!dev) throw new Error(`No speakers available. Start Spotify on “${S.spDevice}” from your phone once, then press ⟳.`);
+    let body;
+    if (uri === 'liked') {
+      const t = await sp('/me/tracks?limit=50');
+      body = { uris: (t?.items || []).map(x => x.track?.uri).filter(Boolean) };
+      if (!body.uris.length) throw new Error('No liked songs yet');
+    } else body = { context_uri: uri };
+    await sp('/me/player/play?device_id=' + encodeURIComponent(dev), { method: 'PUT', body: JSON.stringify(body) });
+    const dn = spLib.devices.find(d => d.id === dev)?.name || 'speaker';
+    toast(`▶ ${name} on ${dn}`); setTimeout(spRefreshNow, 900);
+  } catch (e) { msg.className = 'status err'; msg.textContent = e.message; }
+}
+
+/* ================= installable app (PWA) ================= */
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
+if (/^https?:$/.test(location.protocol)) {
+  const l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.appendChild(l);
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+/* ================= clock, night mode, idle, wake lock ================= */
+let lastDay = ymd(new Date()), lastMin = -1;
+function tick() {
+  const n = new Date();
+  $('#hubname').textContent = S.title || '';
+  $('#time').innerHTML = S.use24h ? hm(n) : `${n.getHours() % 12 || 12}:${pad(n.getMinutes())}<small>${n.getHours() < 12 ? 'AM' : 'PM'}</small>`;
+  $('#date').textContent = n.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const lt = n.toLocaleTimeString('en-US', { timeZone: 'Europe/London', hour: 'numeric', minute: '2-digit', hour12: !S.use24h });
+  const ld = n.toLocaleDateString('en-US', { timeZone: 'Europe/London', weekday: 'short' }), here = n.toLocaleDateString('en-US', { weekday: 'short' });
+  $('#london').innerHTML = `London <b>${lt}</b>${ld !== here ? `<small>${ld}</small>` : ''}`;
+  if (n.getMinutes() !== lastMin) {
+    lastMin = n.getMinutes(); applyNight();
+    if (ymd(n) !== lastDay) { lastDay = ymd(n); state.cursor = sod(n); invalidate(); loadEvents(); }
+    else if (state.view !== 'month' && !$('.backdrop')) renderCalendar();
+  }
+}
+function applyNight() {
+  const h = new Date().getHours();
+  const vid = !!(S.ytUrl && parseYouTube(S.ytUrl));
+  const photoDark = (!!state.bg || vid) && S.bgTheme !== 'light' && (S.bgTheme === 'dark' || vid || state.bg.lum < 0.5);
+  const dark = S.night === 'on' || (S.night === 'auto' && (h >= 21 || h < 6)) || photoDark;
+  document.body.classList.toggle('dark', dark);
+  document.querySelector('meta[name=theme-color]').content = dark ? '#11131a' : '#f4f1ea';
+}
+function parseYouTube(u) {
+  try {
+    const url = new URL(u.trim());
+    if (!/(^|\.)youtube\.com$|^youtu\.be$|(^|\.)youtube-nocookie\.com$/.test(url.hostname)) return null;
+    const list = url.searchParams.get('list');
+    let id = url.hostname === 'youtu.be' ? url.pathname.slice(1) : url.searchParams.get('v');
+    const m = url.pathname.match(/\/(embed|shorts|live|v)\/([\w-]{11})/); if (!id && m) id = m[2];
+    id = id && /^[\w-]{11}$/.test(id) ? id : null;
+    return id || list ? { id, list } : null;
+  } catch { return null; }
+}
+let ytMuted = true;
+function applyVideo() {
+  const box = $('#ytbg'), yt = S.ytUrl ? parseYouTube(S.ytUrl) : null, btn = $('#btn-sound');
+  if (!yt) { box.classList.remove('on'); box.innerHTML = ''; btn.style.display = 'none'; return; }
+  ytMuted = !S.ytSound;
+  const q = new URLSearchParams({ autoplay: 1, mute: ytMuted ? 1 : 0, loop: 1, controls: 0, playsinline: 1, rel: 0, iv_load_policy: 3, disablekb: 1, fs: 0, enablejsapi: 1 });
+  if (/^https?:$/.test(location.protocol)) q.set('origin', location.origin);
+  let src;
+  if (yt.id) { q.set('playlist', yt.list ? '' : yt.id); if (yt.list) { q.delete('playlist'); q.set('list', yt.list); } src = `https://www.youtube.com/embed/${yt.id}?${q}`; }
+  else { q.set('list', yt.list); src = `https://www.youtube.com/embed/videoseries?${q}`; }
+  if (box.dataset.src !== src) {
+    box.innerHTML = `<iframe src="${esc(src)}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1" title="Background video"></iframe>`;
+    box.dataset.src = src;
+  }
+  box.classList.add('on'); btn.style.display = ''; btn.textContent = ytMuted ? '🔇' : '🔊';
+}
+function ytCommand(func, args = []) { $('#ytbg iframe')?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args }), '*'); }
+function applyLook() {
+  const b = document.body, root = document.body.style, bg = state.bg; // set on <body> so dark/light colors resolve correctly
+  const vid = !!(S.ytUrl && parseYouTube(S.ytUrl));
+  applyVideo();
+  b.classList.toggle('hasbg', !!bg || vid);
+  b.style.backgroundImage = bg ? `url("${bg.data}")` : '';
+  const op = bg || vid ? S.boxOpacity : 100;
+  root.setProperty('--cardbg', op >= 100 ? 'var(--card)' : `color-mix(in srgb, var(--card) ${op}%, transparent)`);
+  root.setProperty('--blur', (bg || vid) && S.boxBlur && op < 100 ? '18px' : '0px');
+  applyNight();
+}
+// Shrinks a chosen photo to screen size and saves it in this browser.
+async function processBg(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('That file isn’t an image Chrome can open.')); i.src = url; });
+    const s = document.createElement('canvas'); s.width = s.height = 24;
+    const sx = s.getContext('2d'); sx.drawImage(img, 0, 0, 24, 24);
+    const px = sx.getImageData(0, 0, 24, 24).data; let L = 0;
+    for (let i = 0; i < px.length; i += 4) L += (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255;
+    const lum = L / (px.length / 4);
+    const target = Math.max(1920, Math.round(screen.width * (window.devicePixelRatio || 1)));
+    for (const w of [Math.min(target, 3840), 1920, 1280]) {
+      const sc = Math.min(1, w / img.naturalWidth), c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      for (const q of [0.85, 0.7, 0.55]) {
+        const rec = { data: c.toDataURL('image/jpeg', q), lum };
+        try { localStorage.setItem('hub.bg', JSON.stringify(rec)); return rec; } catch {}
+      }
+    }
+    throw new Error('That image is too large to save — try a smaller one.');
+  } finally { URL.revokeObjectURL(url); }
+}
+// Hide the mouse pointer and on-screen controls when nobody's using it; snap back to "today" after a while.
+let idleT, homeT;
+function activity() {
+  document.body.classList.remove('idle');
+  clearTimeout(idleT); clearTimeout(homeT);
+  idleT = setTimeout(() => { if (!$('.backdrop')) document.body.classList.add('idle'); }, 8000);
+  homeT = setTimeout(goHome, 3 * 60e3);
+}
+function goHome() {
+  if ($('.backdrop')) { homeT = setTimeout(goHome, 60e3); return; }
+  const t = sod(new Date());
+  if (state.view !== S.defaultView || +state.cursor !== +t) { state.view = S.defaultView; state.cursor = t; loadEvents(); }
+}
+let wakeLock = null;
+async function keepAwake() {
+  try { if ('wakeLock' in navigator && !wakeLock && !document.hidden) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); } } catch {}
+}
+
+/* ================= wiring ================= */
+function shift(dir) {
+  const c = state.cursor;
+  state.cursor = state.view === 'day' ? addDays(c, dir) : state.view === 'week' ? addDays(c, 7 * dir) : new Date(c.getFullYear(), c.getMonth() + dir, 1);
+  loadEvents();
+}
+function setView(v) { state.view = v; loadEvents(); }
+const findEvent = key => state.events.find(e => e.key === key);
+
+$('#prev').onclick = () => shift(-1);
+$('#next').onclick = () => shift(1);
+$('#today').onclick = () => { state.cursor = sod(new Date()); loadEvents(); };
+$('#viewseg').onclick = e => { const b = e.target.closest('button'); if (b) setView(b.dataset.v); };
+$('#addbtn').onclick = () => {
+  const base = state.view === 'day' && !sameDay(state.cursor, new Date()) ? (() => { const d = new Date(state.cursor); d.setHours(9); return d; })() : roundedNow();
+  openEditor(null, { start: base, end: new Date(+base + 36e5) });
+};
+$('#sync').onclick = () => state.sync === 'error' ? toast(state.syncMsg) : null;
+$('#btn-settings').onclick = openSettings;
+$('#spbtn').onclick = openSpotify;
+$('#sp-prev').onclick = () => spCmd('previous');
+$('#sp-play').onclick = () => spCmd('play');
+$('#sp-next').onclick = () => spCmd('next');
+$('#btn-sound').onclick = () => { ytMuted = !ytMuted; if (ytMuted) ytCommand('mute'); else { ytCommand('unMute'); ytCommand('setVolume', [100]); ytCommand('playVideo'); } $('#btn-sound').textContent = ytMuted ? '🔇' : '🔊'; };
+$('#btn-refresh').onclick = () => { invalidate(); loadEvents(); loadWeather(); loadFantasy(); loadParks(true); toast('Refreshing…'); };
+const toggleFull = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => toast('Full screen not available — press F11')); };
+$('#btn-full').onclick = toggleFull;
+$('#ff').addEventListener('click', e => { if (e.target.closest('[data-act=settings]')) openSettings(); });
+
+$('#calbody').addEventListener('click', e => {
+  const evEl = e.target.closest('.ev,.chip');
+  if (evEl) { const ev = findEvent(evEl.dataset.key); if (ev) openEditor(ev); return; }
+  const dh = e.target.closest('.tg-dh');
+  if (dh) { if (state.view === 'week') { state.cursor = parseYmd(dh.dataset.day); setView('day'); } return; }
+  const ad = e.target.closest('.tg-ad');
+  if (ad) { const d = parseYmd(ad.dataset.day); openEditor(null, { allDay: true, start: d, end: addDays(d, 1) }); return; }
+  const col = e.target.closest('.tg-col');
+  if (col) {
+    const y = e.clientY - col.getBoundingClientRect().top;
+    const mins = Math.min(23 * 60 + 30, Math.max(0, Math.floor(y / HOUR * 2) * 30));
+    const s = parseYmd(col.dataset.day); s.setMinutes(mins);
+    openEditor(null, { start: s, end: new Date(+s + 36e5) }); return;
+  }
+  const mc = e.target.closest('.mcell');
+  if (mc) { state.cursor = parseYmd(mc.dataset.day); setView('day'); }
+});
+document.addEventListener('keydown', e => {
+  activity();
+  if (e.key === 'Escape') closeModal();
+  if ($('.backdrop') || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (k === 'arrowleft') shift(-1);
+  else if (k === 'arrowright') shift(1);
+  else if (k === 't') $('#today').click();
+  else if (k === 'd') setView('day');
+  else if (k === 'w') setView('week');
+  else if (k === 'm') setView('month');
+  else if (k === 'n') $('#addbtn').click();
+  else if (k === 'f') toggleFull();
+  else if (k === 's') openSettings();
+  else if (k === 'r') $('#btn-refresh').click();
+});
+['mousemove', 'mousedown', 'wheel', 'touchstart'].forEach(ev => document.addEventListener(ev, activity, { passive: true }));
+document.addEventListener('mousedown', keepAwake);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { keepAwake(); invalidate(); loadEvents(); loadWeather(); loadFantasy(); } });
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { renderCalendar(); renderBox(); }, 150); });
+
+/* ================= boot ================= */
+spHandleRedirect().then(() => { renderSpBar(); spRefreshNow(); });
+setInterval(() => { if (spOn() && !document.hidden) spRefreshNow(); }, 15000);
+seedDemo();
+applyLook(); tick(); setSync('off'); renderWeather(); renderBox(); activity(); keepAwake();
+loadEvents(); loadWeather(); Promise.all([loadFantasy(), loadParks(true)]).then(scheduleFfRotate);
+setInterval(() => loadParks().then(() => { if (!ffTimer) scheduleFfRotate(); }), 5 * 60e3);
+setInterval(tick, 1000);
+setInterval(() => { if (!$('.backdrop')) { invalidate(); loadEvents(); } }, 5 * 60e3);
+setInterval(loadWeather, 20 * 60e3);
+setInterval(() => loadFantasy().then(() => { if (!ffTimer) scheduleFfRotate(); }), 2 * 60e3);
+</script>
+</body>
+</html>
